@@ -215,11 +215,12 @@ for opp_type, color in PARCEL_COLORS.items():
 
 print("\n5. Adding rail lines and stations (if available)...")
 
-# Create feature groups for organized layer control
+# Create feature groups for ALL layers
+# Rail lines and stations won't be passed to LayerControl (always visible)
 rail_lines_group = folium.FeatureGroup(name='RTD Rail Lines', show=True)
 stations_group = folium.FeatureGroup(name='RTD Stations', show=True)
-buffer_half_mile_group = folium.FeatureGroup(name='1/2 Mile from Transit', show=False)
-buffer_quarter_mile_group = folium.FeatureGroup(name='1/4 Mile from Transit', show=False)
+buffer_half_mile_group = folium.FeatureGroup(name='1/2 Mile from Transit', show=True)
+buffer_quarter_mile_group = folium.FeatureGroup(name='1/4 Mile from Transit', show=True)
 
 # Load rail lines (optional)
 try:
@@ -261,7 +262,7 @@ try:
                 'opacity': 0.9
             },
             tooltip=name if name else route
-        ).add_to(rail_lines_group)
+        ).add_to(rail_lines_group)  # Add to feature group to avoid macro_element spam
     
     rail_lines_group.add_to(m)
     print("   ✓ Added rail lines with official RTD colors")
@@ -334,12 +335,19 @@ try:
         </div>
         """
         
-        # Add station marker
+        # Add station marker to feature group to avoid macro_element spam
+        # Use custom HTML icon for smaller size (50% of default)
+        icon_html = '''
+        <div style="font-size: 18px; color: #d63031; text-shadow: 1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white, -1px 1px 2px white;">
+            <i class="fa fa-train"></i>
+        </div>
+        '''
+        
         folium.Marker(
             location=[station.geometry.y, station.geometry.x],
             popup=folium.Popup(popup_html, max_width=300),
             tooltip=station_name,
-            icon=folium.Icon(color='red', icon='train', prefix='fa')
+            icon=folium.DivIcon(html=icon_html)
         ).add_to(stations_group)
     
     stations_group.add_to(m)
@@ -356,73 +364,74 @@ except Exception as e:
 print("\n6. Adding legend...")
 
 legend_html = '''
-<div id="legend" style="position: fixed; bottom: 50px; left: 50px; width: 280px; 
+<div id="legend" style="position: fixed; bottom: 10px; left: 10px; width: 260px; 
      background-color: white; border: 2px solid grey; z-index: 9999; 
-     font-size: 14px; border-radius: 5px;">
-    <div style="background-color: #f0f0f0; padding: 10px; border-bottom: 1px solid grey; cursor: pointer;"
-         onclick="document.getElementById('legend-content').style.display = 
-                  document.getElementById('legend-content').style.display === 'none' ? 'block' : 'none'">
-        <h4 style="margin: 0; display: inline;">Legend</h4>
-        <span style="float: right;">▼</span>
-    </div>
-    <div id="legend-content" style="padding: 10px;">
-        <h4 style="margin-top: 0;">Upzoning Opportunities</h4>
-        <div style="margin-bottom: 5px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #FF0000; margin-right: 8px; border: 1px solid #ccc;"></span>
-            Large Vacant ({:,} parcels)
+     font-size: 12px; border-radius: 5px;">
+    <div id="legend-content" style="padding: 8px;">
+        <h4 style="margin: 0 0 5px 0; font-size: 14px; cursor: pointer;" 
+            onclick="this.parentElement.style.display = 
+                     this.parentElement.style.display === 'none' ? 'block' : 'none'; 
+                     document.getElementById('legend-toggle').style.display = 'block';">
+            Upzoning Opportunities <span style="float: right; font-size: 12px;">▼</span>
+        </h4>
+        <div style="margin-bottom: 4px; display: flex; align-items: center;">
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FF0000; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">Large Vacant Land ({:,})</span>
         </div>
-        <div style="margin-bottom: 5px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #FF8C00; margin-right: 8px; border: 1px solid #ccc;"></span>
-            SF on MU Zoning ({:,})
+        <div style="margin-bottom: 4px; display: flex; align-items: center;">
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FF8C00; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">SF on Multi-Unit Zoning ({:,})</span>
         </div>
-        <div style="margin-bottom: 5px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #00CED1; margin-right: 8px; border: 1px solid #ccc;"></span>
-            Commercial on MU ({:,})
+        <div style="margin-bottom: 4px; display: flex; align-items: center;">
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #00CED1; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">Commercial on Mixed-Use ({:,})</span>
         </div>
-        <div style="margin-bottom: 5px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #9370DB; margin-right: 8px; border: 1px solid #ccc;"></span>
-            Industrial Conv. ({:,})
+        <div style="margin-bottom: 4px; display: flex; align-items: center;">
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #9370DB; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">Industrial Conversion ({:,})</span>
         </div>
-        <div style="margin-bottom: 5px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #FF69B4; margin-right: 8px; border: 1px solid #ccc;"></span>
-            Industrial Needs Rezoning ({:,})
+        <div style="margin-bottom: 4px; display: flex; align-items: center;">
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FF69B4; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">Industrial Needs Rezoning ({:,})</span>
         </div>
-        <div style="margin-bottom: 10px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #FFD700; margin-right: 8px; border: 1px solid #ccc;"></span>
-            Teardowns ({:,})
+        <div style="margin-bottom: 6px; display: flex; align-items: center;">
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FFD700; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">Teardown Candidates ({:,})</span>
         </div>
-        <hr style="margin: 10px 0;">
-        <h4 style="margin: 10px 0 5px 0;">Zoning Categories</h4>
+        <hr style="margin: 6px 0;">
+        <h4 style="margin: 5px 0 4px 0; font-size: 13px;">Zoning Categories</h4>
         <div style="margin-bottom: 3px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #E60000; margin-right: 8px; border: 1px solid #ccc;"></span>
-            Downtown
-        </div>
-        <div style="margin-bottom: 3px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #FF6A00; margin-right: 8px; border: 1px solid #ccc;"></span>
-            Mixed Use
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #E60000; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">Downtown</span>
         </div>
         <div style="margin-bottom: 3px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #FFD700; margin-right: 8px; border: 1px solid #ccc;"></span>
-            Multi Unit
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FF6A00; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">Mixed Use</span>
         </div>
         <div style="margin-bottom: 3px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #FFF4C3; margin-right: 8px; border: 1px solid #ccc;"></span>
-            Single Unit
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FFD700; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">Multi Unit</span>
         </div>
         <div style="margin-bottom: 3px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 20px; height: 20px; background-color: #C9BDFF; margin-right: 8px; border: 1px solid #ccc;"></span>
-            Industrial
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FFF4C3; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">Single Unit</span>
         </div>
-        <hr style="margin: 10px 0;">
-        <div style="font-size: 12px; color: #666;">
-            <b>Total Opportunity:</b> {:,} parcels<br>
-            <b>Total Land:</b> {:,} acres<br>
+        <div style="margin-bottom: 6px; display: flex; align-items: center;">
+            <span style="display: inline-block; width: 16px; height: 16px; background-color: #C9BDFF; margin-right: 6px; border: 1px solid #ccc;"></span>
+            <span style="font-size: 11px;">Industrial</span>
+        </div>
+        <hr style="margin: 6px 0;">
+        <div style="font-size: 10px; color: #666; line-height: 1.4;">
+            <b>Total:</b> {:,} parcels, {:,} acres<br>
             <b>Potential Units:</b> ~{:,}<br>
-            <span style="font-size: 10px; font-style: italic;">
-            (Conservative estimate: 1,500 gross sq ft per unit,<br>
-            accounting for lobbies, elevators, parking, etc.)
+            <span style="font-size: 9px; font-style: italic;">
+            (1,500 sf/unit incl. common areas)
             </span>
         </div>
+    </div>
+    <div id="legend-toggle" style="display: none; padding: 8px; cursor: pointer; text-align: center; background-color: #f0f0f0; border-top: 1px solid grey;"
+         onclick="document.getElementById('legend-content').style.display = 'block'; this.style.display = 'none';">
+        <span style="font-size: 12px;">▲ Show Legend</span>
     </div>
 </div>
 '''.format(
@@ -453,6 +462,95 @@ folium.LayerControl(collapsed=True, position='topright').add_to(m)
 output_file = 'denver_tod_with_parcels_v2.html'
 print(f"\n7. Saving map to: {output_file}")
 m.save(output_file)
+
+# Add title header to the HTML
+print("   Adding title header...")
+with open(output_file, 'r') as f:
+    html_content = f.read()
+
+# Insert title CSS and HTML right after the <body> tag
+title_html = '''
+<style>
+    /* Move Leaflet zoom controls to top right */
+    .leaflet-top.leaflet-left {
+        top: 10px;
+        right: 60px;
+        left: auto !important;
+    }
+    
+    .map-title {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+        background-color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif;
+        max-width: 280px;
+    }
+    .map-title h1 {
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+        font-weight: bold;
+        line-height: 1.3;
+    }
+    .map-title p {
+        margin: 3px 0 0 0;
+        font-size: 11px;
+        color: #666;
+        line-height: 1.2;
+    }
+    .map-title .nav-links {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 12px;
+        font-size: 11px;
+    }
+    .map-title .nav-links a {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .map-title .nav-links a:hover {
+        text-decoration: underline;
+    }
+</style>
+<script>
+    // Remove rail lines and stations from layer control after page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            // Find all layer control labels
+            var labels = document.querySelectorAll('.leaflet-control-layers-overlays label');
+            labels.forEach(function(label) {
+                var text = label.textContent.trim();
+                // Hide RTD Rail Lines and RTD Stations from control
+                if (text === 'RTD Rail Lines' || text === 'RTD Stations') {
+                    label.style.display = 'none';
+                }
+            });
+        }, 100);
+    });
+</script>
+<div class="map-title">
+    <h1>Mile High Potential</h1>
+    <p>Finding development opportunities in Denver among its transit network</p>
+    <div class="nav-links">
+        <a href="about.html">About</a>
+        <a href="https://github.com/FrazRoc/zoning_project" target="_blank">GitHub</a>
+    </div>
+</div>
+'''
+
+# Insert after <body> tag
+html_content = html_content.replace('<body>', '<body>' + title_html)
+
+with open(output_file, 'w') as f:
+    f.write(html_content)
 
 print("\n" + "="*70)
 print("✓ MAP CREATED SUCCESSFULLY")
