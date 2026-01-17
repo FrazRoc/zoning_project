@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Mile High Potential</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        nav {
+            background-color: #34495e;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        nav .container {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        
+        nav a:hover {
+            opacity: 0.8;
+        }
+        
+        main {
+            background-color: white;
+            padding: 3rem 0;
+        }
+        
+        .content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.3rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+        }
+        
+        ul {
+            margin-bottom: 1rem;
+            margin-left: 2rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .highlight-box {
+            background-color: #ecf0f1;
+            border-left: 4px solid #3498db;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-box {
+            background-color: #3498db;
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-box .number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-box .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .category-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .category-item {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .category-item h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        
+        footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Mile High Potential</h1>
+            <p>Finding development opportunities in Denver among its transit network</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <a href="index.html">Map</a>
+            <a href="about.html">About</a>
+            <a href="https://github.com/FrazRoc/zoning_project" target="_blank">GitHub</a>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="content">
+            <h2>About This Project</h2>
+            <p>
+                Mile High Potential is an interactive mapping tool that identifies over 2,500 parcels near RTD light rail stations 
+                with significant redevelopment potential. By visualizing opportunities for transit-oriented development (TOD), 
+                this project aims to support Denver's housing goals and promote sustainable, equitable growth.
+            </p>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <span class="number">2,521</span>
+                    <span class="label">Opportunity Parcels</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">2,875</span>
+                    <span class="label">Acres of Land</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">~488K</span>
+                    <span class="label">Potential Units</span>
+                </div>
+            </div>
+            
+            <h2>Why Transit-Oriented Development?</h2>
+            <p>
+                Transit-oriented development creates walkable, mixed-use communities around public transportation. Benefits include:
+            </p>
+            <ul>
+                <li><strong>Reduced car dependency:</strong> Residents can walk, bike, or take transit to work and amenities</li>
+                <li><strong>Lower housing costs:</strong> Reduced transportation expenses and increased housing supply</li>
+                <li><strong>Environmental benefits:</strong> Lower carbon emissions and reduced urban sprawl</li>
+                <li><strong>Economic vitality:</strong> Increased foot traffic supports local businesses</li>
+                <li><strong>Housing equity:</strong> Access to opportunity for residents without cars</li>
+            </ul>
+            
+            <h2>Opportunity Categories</h2>
+            <p>The map identifies six types of redevelopment opportunities:</p>
+            
+            <div class="category-list">
+                <div class="category-item">
+                    <h4>Large Vacant Land</h4>
+                    <p>218 parcels of vacant land over 0.5 acres, ideal for large-scale development projects.</p>
+                </div>
+                
+                <div class="category-item">
+                    <h4>Single-Family on Multi-Unit Zoning</h4>
+                    <p>673 parcels currently used for single-family homes but zoned for multi-unit housing.</p>
+                </div>
+                
+                <div class="category-item">
+                    <h4>Commercial on Mixed-Use Zoning</h4>
+                    <p>360 parcels with commercial buildings on mixed-use zoning allowing residential development.</p>
+                </div>
+                
+                <div class="category-item">
+                    <h4>Industrial Conversion</h4>
+                    <p>301 industrial properties on mixed-use zoning, ready for residential conversion.</p>
+                </div>
+                
+                <div class="category-item">
+                    <h4>Industrial Needs Rezoning</h4>
+                    <p>390 industrial parcels near transit that would require rezoning for residential use.</p>
+                </div>
+                
+                <div class="category-item">
+                    <h4>Teardown Candidates</h4>
+                    <p>579 underutilized properties with low improvement-to-land value ratios.</p>
+                </div>
+            </div>
+            
+            <h2>Methodology</h2>
+            
+            <h3>Data Sources</h3>
+            <ul>
+                <li><strong>Parcel Data:</strong> Denver Open Data (property boundaries, zoning, assessed values)</li>
+                <li><strong>Zoning Districts:</strong> Denver Open Data (current zoning designations)</li>
+                <li><strong>Transit Data:</strong> RTD GIS (light rail lines and station locations)</li>
+            </ul>
+            
+            <h3>Selection Criteria</h3>
+            <p>Parcels were selected based on:</p>
+            <ul>
+                <li><strong>Proximity to transit:</strong> Within 1/2 mile of RTD light rail stations</li>
+                <li><strong>Zoning alignment:</strong> Currently zoned for residential or mixed-use development</li>
+                <li><strong>Development potential:</strong> Underutilized land or buildings with redevelopment opportunity</li>
+                <li><strong>Exclusions:</strong> Public land, parks, right-of-ways, existing apartment buildings, and narrow parcels (railroad corridors)</li>
+            </ul>
+            
+            <h3>Unit Calculations</h3>
+            <p>
+                Potential housing units are estimated conservatively using each parcel's maximum allowed Floor Area Ratio (FAR) 
+                or story height from Denver's zoning code. We assume 1,500 gross square feet per unit, which accounts for:
+            </p>
+            <ul>
+                <li>Average unit size of ~900 sq ft (mix of studios, 1BR, 2BR)</li>
+                <li>Building efficiency of ~60% (common areas, lobbies, elevators, parking, mechanical)</li>
+            </ul>
+            
+            <div class="highlight-box">
+                <strong>Note:</strong> These are theoretical maximums based on zoning. Actual development would be constrained 
+                by economic feasibility, site conditions, parking requirements, historic preservation, and community input.
+            </div>
+            
+            <h2>Limitations</h2>
+            <p>This analysis has several important limitations:</p>
+            <ul>
+                <li><strong>Market feasibility:</strong> Not all opportunities are economically viable to develop</li>
+                <li><strong>Site constraints:</strong> Flood zones, contamination, slopes, and other physical limitations are not considered</li>
+                <li><strong>Owner intent:</strong> Property owners may not wish to sell or redevelop</li>
+                <li><strong>Community impact:</strong> Development must balance growth with neighborhood character and displacement concerns</li>
+                <li><strong>Infrastructure capacity:</strong> Water, sewer, and other utilities may require upgrades</li>
+            </ul>
+            
+            <h2>How to Use This Map</h2>
+            <ul>
+                <li><strong>Toggle layers:</strong> Use the layer control (top right) to show/hide different categories</li>
+                <li><strong>Click parcels:</strong> View detailed information including zoning, size, and development potential</li>
+                <li><strong>View transit context:</strong> See how parcels relate to rail lines and station buffers</li>
+                <li><strong>Explore neighborhoods:</strong> Zoom and pan to examine different parts of Denver</li>
+            </ul>
+            
+            <h2>Get Involved</h2>
+            <p>
+                This project is open source and contributions are welcome! Visit our 
+                <a href="https://github.com/FrazRoc/zoning_project" target="_blank">GitHub repository</a> to:
+            </p>
+            <ul>
+                <li>View the source code and methodology</li>
+                <li>Report issues or suggest improvements</li>
+                <li>Contribute to data analysis or visualization</li>
+            </ul>
+            
+            <h2>Contact</h2>
+            <p>
+                Questions, feedback, or suggestions? Please open an issue on 
+                <a href="https://github.com/FrazRoc/zoning_project/issues" target="_blank">GitHub</a> or reach out through the repository.
+            </p>
+            
+            <div class="highlight-box">
+                <strong>Disclaimer:</strong> This tool is for informational and educational purposes only. It does not constitute 
+                legal, financial, or development advice. Property owners and developers should conduct thorough due diligence 
+                and consult with professionals before making development decisions.
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Mile High Potential | <a href="https://github.com/FrazRoc/zoning_project">Open Source</a></p>
+            <p style="margin-top: 0.5rem; opacity: 0.8;">Data sources: Denver Open Data, RTD GIS</p>
+        </div>
+    </footer>
+</body>
+</html>
