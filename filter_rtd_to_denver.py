@@ -1,4 +1,5 @@
 import geopandas as gpd
+import pandas as pd
 import requests
 
 print("="*70)
@@ -47,15 +48,31 @@ stations = stations.to_crs(denver.crs)
 # Spatial join to keep only stations within Denver
 stations_denver = gpd.sjoin(stations, denver, how='inner', predicate='within')
 
-# Drop the join index column
-if 'index_right' in stations_denver.columns:
-    stations_denver = stations_denver.drop(columns=['index_right'])
+# Drop ALL columns from the right (denver) to avoid duplicate column issues
+cols_to_drop = [col for col in stations_denver.columns if col.endswith('_left') or col.endswith('_right') or col == 'index_right']
+stations_denver = stations_denver.drop(columns=cols_to_drop, errors='ignore')
 
-print(f"   ✓ Filtered to {len(stations_denver)} stations within Denver")
-print(f"   Removed {len(stations) - len(stations_denver)} stations outside Denver")
+# Also drop any duplicate column names by keeping only the first occurrence
+stations_denver = stations_denver.loc[:, ~stations_denver.columns.duplicated()]
+
+# ALSO keep all A-Line stations (even if outside Denver, due to TOD zones crossing into Denver)
+# Match any station with these keywords (covers all A-Line stations)
+a_line_stations = stations[stations['NAME'].str.contains('61st.*Peña|40th.*Airport|Peoria|Central Park|40th.*Ave|38th.*Blake|Union Station', case=False, na=False, regex=True)]
+print(f"   Keeping {len(a_line_stations)} A-Line stations (TOD zones cross Denver boundary)")
+
+# Reset indices before concatenating to avoid duplicate index issues
+stations_denver = stations_denver.reset_index(drop=True)
+a_line_stations = a_line_stations.reset_index(drop=True)
+
+# Combine: Denver stations + all A-Line stations, remove duplicates based on NAME
+stations_combined = pd.concat([stations_denver, a_line_stations], ignore_index=True)
+stations_combined = stations_combined.drop_duplicates(subset=['NAME'])
+
+print(f"   ✓ Filtered to {len(stations_combined)} stations (Denver + A-Line)")
+print(f"   Removed {len(stations) - len(stations_combined)} stations outside Denver")
 
 # Save filtered stations
-stations_denver.to_file('rtd_lightrail_stations.geojson', driver='GeoJSON')
+stations_combined.to_file('rtd_lightrail_stations.geojson', driver='GeoJSON')
 print(f"   ✓ Saved to rtd_lightrail_stations.geojson")
 
 # Load RTD rail lines
@@ -66,15 +83,29 @@ print(f"   Original line segments: {len(rail_lines)}")
 # Ensure same CRS
 rail_lines = rail_lines.to_crs(denver.crs)
 
-# Clip rail lines to Denver boundary (not just intersect)
-print("   Clipping rail lines to Denver boundary...")
-rail_lines_denver = gpd.clip(rail_lines, denver)
+# Separate A-Line from other lines
+a_line = rail_lines[rail_lines['ROUTE'] == 'A-Line'].copy()
+other_lines = rail_lines[rail_lines['ROUTE'] != 'A-Line'].copy()
 
-print(f"   ✓ Clipped to {len(rail_lines_denver)} line segments within Denver")
-print(f"   Removed {len(rail_lines) - len(rail_lines_denver)} line segments outside Denver")
+print(f"   A-Line segments: {len(a_line)} (keeping all - TOD zones cross Denver boundary)")
+print(f"   Other line segments: {len(other_lines)} (clipping to Denver boundary)")
 
-# Save clipped lines
-rail_lines_denver.to_file('rtd_lightrail_lines.geojson', driver='GeoJSON')
+# Clip non-A-Line segments to Denver boundary
+print("   Clipping non-A-Line rail lines to Denver boundary...")
+other_lines_denver = gpd.clip(other_lines, denver)
+
+# Reset indices before combining
+a_line = a_line.reset_index(drop=True)
+other_lines_denver = other_lines_denver.reset_index(drop=True)
+
+# Combine: all A-Line + clipped other lines
+rail_lines_combined = pd.concat([a_line, other_lines_denver], ignore_index=True)
+
+print(f"   ✓ Result: {len(rail_lines_combined)} line segments (A-Line + Denver portions of other lines)")
+print(f"   Removed {len(rail_lines) - len(rail_lines_combined)} line segments outside Denver")
+
+# Save combined lines
+rail_lines_combined.to_file('rtd_lightrail_lines.geojson', driver='GeoJSON')
 print(f"   ✓ Saved to rtd_lightrail_lines.geojson")
 
 # Show which stations were removed
