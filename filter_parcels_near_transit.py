@@ -1,12 +1,12 @@
 # filter_parcels_near_transit.py
-# Extract only parcels within 1/2 mile of transit stations
+# Extract only parcels within 3/8 mile of transit stations (matching ballot measure scope)
 
 import geopandas as gpd
 import pandas as pd
 from shapely.ops import unary_union
 
 print("=" * 70)
-print("FILTERING PARCELS NEAR TRANSIT")
+print("FILTERING PARCELS NEAR TRANSIT (3/8 MILE)")
 print("=" * 70)
 
 # Load stations
@@ -16,22 +16,22 @@ stations = gpd.read_file(stations_url)
 print(f"   Loaded {len(stations)} stations")
 
 # Project to meters for buffering
-print("\n2. Creating 1/2 mile buffer around all stations...")
+print("\n2. Creating 3/8 mile buffer around all stations...")
 stations_proj = stations.to_crs('EPSG:32613')  # UTM Zone 13N
 
-# Create buffers and merge
-buffers = [station.geometry.buffer(804.67) for idx, station in stations_proj.iterrows()]
+# Create buffers and merge - 3/8 mile = 1,980 feet = 603.5 meters
+buffers = [station.geometry.buffer(603.5) for idx, station in stations_proj.iterrows()]
 merged_buffer = unary_union(buffers)
 
 # Create a GeoDataFrame with the merged buffer
 buffer_gdf = gpd.GeoDataFrame({'geometry': [merged_buffer]}, crs='EPSG:32613')
 buffer_wgs84 = buffer_gdf.to_crs('EPSG:4326')
 
-print(f"   Created merged buffer covering transit-accessible area")
+print(f"   Created merged buffer covering transit-accessible area (3/8 mile)")
 
 # Save the buffer for reference
-buffer_wgs84.to_file('transit_buffer_half_mile.geojson', driver='GeoJSON')
-print(f"   Saved buffer to: transit_buffer_half_mile.geojson")
+buffer_wgs84.to_file('parcels_near_transit.geojson', driver='GeoJSON')
+print(f"   Saved buffer to: parcels_near_transit.geojson")
 
 # Now filter parcels
 print("\n3. Loading and filtering parcels...")

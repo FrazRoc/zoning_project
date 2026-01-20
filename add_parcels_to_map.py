@@ -34,7 +34,10 @@ print(f"   ✓ Loaded {len(zoning):,} zoning districts")
 print(f"   ✓ Loaded {len(parcels):,} parcels (with ballot measure data)")
 
 # Create two datasets for toggle
+# Current: exclude Industrial Near Transit (not legally developable)
 current_parcels = parcels[parcels['opportunity_type'] != 'Industrial Near Transit'].copy()
+
+# Ballot: include all parcels
 ballot_parcels = parcels.copy()
 
 # Calculate stats
@@ -371,8 +374,7 @@ print("\n5. Adding rail lines and stations (if available)...")
 # Rail lines and stations won't be passed to LayerControl (always visible)
 rail_lines_group = folium.FeatureGroup(name='RTD Rail Lines', show=True)
 stations_group = folium.FeatureGroup(name='RTD Stations', show=True)
-buffer_half_mile_group = folium.FeatureGroup(name='1/2 Mile from Transit', show=True)
-buffer_quarter_mile_group = folium.FeatureGroup(name='1/4 Mile from Transit', show=True)
+buffer_three_eighths_mile_group = folium.FeatureGroup(name='3/8 Mile from Transit', show=True)
 
 # Load rail lines (optional)
 try:
@@ -431,8 +433,7 @@ try:
     stations_projected = stations.to_crs('EPSG:32613')  # UTM Zone 13N for Denver
     
     # Create buffer polygons
-    half_mile_buffers = []
-    quarter_mile_buffers = []
+    three_eighths_mile_buffers = []  # 3/8 mile = 1,980 ft
     
     # NEW: Ballot measure tier buffers
     tier_1_buffers = []  # 660ft (C-MX-8x)
@@ -440,9 +441,8 @@ try:
     tier_3_buffers = []  # 1,980ft (G-MU-3x)
     
     for idx, station in stations_projected.iterrows():
-        # Create buffers in projected CRS (meters)
-        half_mile_buffers.append(station.geometry.buffer(804.67))  # 1/2 mile
-        quarter_mile_buffers.append(station.geometry.buffer(402.34))  # 1/4 mile
+        # Create buffer in projected CRS (meters)
+        three_eighths_mile_buffers.append(station.geometry.buffer(603.50))  # 3/8 mile = 1,980ft
         
         # Ballot measure tiers
         tier_1_buffers.append(station.geometry.buffer(201.17))   # 660ft
@@ -451,8 +451,7 @@ try:
     
     # Merge overlapping buffers using unary_union
     from shapely.ops import unary_union
-    merged_half_mile = unary_union(half_mile_buffers)
-    merged_quarter_mile = unary_union(quarter_mile_buffers)
+    merged_three_eighths_mile = unary_union(three_eighths_mile_buffers)
     
     # Merge ballot measure tiers
     merged_tier_1 = unary_union(tier_1_buffers)
@@ -460,40 +459,26 @@ try:
     merged_tier_3 = unary_union(tier_3_buffers)
     
     # Convert back to WGS84 for display
-    merged_half_gdf = gpd.GeoDataFrame({'geometry': [merged_half_mile]}, crs='EPSG:32613').to_crs('EPSG:4326')
-    merged_quarter_gdf = gpd.GeoDataFrame({'geometry': [merged_quarter_mile]}, crs='EPSG:32613').to_crs('EPSG:4326')
+    merged_three_eighths_gdf = gpd.GeoDataFrame({'geometry': [merged_three_eighths_mile]}, crs='EPSG:32613').to_crs('EPSG:4326')
     
     # Convert ballot tiers to WGS84
     merged_tier_1_gdf = gpd.GeoDataFrame({'geometry': [merged_tier_1]}, crs='EPSG:32613').to_crs('EPSG:4326')
     merged_tier_2_gdf = gpd.GeoDataFrame({'geometry': [merged_tier_2]}, crs='EPSG:32613').to_crs('EPSG:4326')
     merged_tier_3_gdf = gpd.GeoDataFrame({'geometry': [merged_tier_3]}, crs='EPSG:32613').to_crs('EPSG:4326')
     
-    # Add merged 1/2 mile buffer (dashed line)
+    # Add merged 3/8 mile buffer (solid line)
     folium.GeoJson(
-        merged_half_gdf,
+        merged_three_eighths_gdf,
         style_function=lambda x: {
             'fillColor': 'none',
             'color': '#0066CC',
             'weight': 2,
-            'opacity': 0.7,
-            'dashArray': '5, 5'  # Dashed line pattern
+            'opacity': 0.4
         },
-        tooltip="1/2 Mile from Transit"
-    ).add_to(buffer_half_mile_group)
+        tooltip="3/8 Mile from Transit (Ballot Measure Scope)"
+    ).add_to(buffer_three_eighths_mile_group)
     
-    # Add merged 1/4 mile buffer (solid line)
-    folium.GeoJson(
-        merged_quarter_gdf,
-        style_function=lambda x: {
-            'fillColor': 'none',
-            'color': '#0044AA',
-            'weight': 2,
-            'opacity': 0.9
-        },
-        tooltip="1/4 Mile from Transit"
-    ).add_to(buffer_quarter_mile_group)
-    
-    print("   ✓ Added merged buffer zones")
+    print("   ✓ Added merged buffer zone (3/8 mile)")
     
     # NEW: Create ballot measure tier circle groups (hidden by default)
     ballot_tier_1_group = folium.FeatureGroup(name='Tier 1: C-MX-8x (660ft)', show=False)
@@ -504,10 +489,11 @@ try:
     folium.GeoJson(
         merged_tier_1_gdf,
         style_function=lambda x: {
-            'fillColor': '#FF6B6B',
+            'fillColor': 'none',
+            'fill': False,
             'color': '#C92A2A',
             'weight': 2,
-            'fillOpacity': 0.15
+            'opacity': 0.4
         },
         tooltip="Tier 1: C-MX-8x (8 stories, ≤660ft from station)"
     ).add_to(ballot_tier_1_group)
@@ -516,10 +502,11 @@ try:
     folium.GeoJson(
         merged_tier_2_gdf,
         style_function=lambda x: {
-            'fillColor': '#FFA94D',
+            'fillColor': 'none',
+            'fill': False,
             'color': '#E67700',
             'weight': 2,
-            'fillOpacity': 0.15
+            'opacity': 0.4
         },
         tooltip="Tier 2: G-RX-5x (5 stories, ≤1,320ft from station)"
     ).add_to(ballot_tier_2_group)
@@ -528,10 +515,11 @@ try:
     folium.GeoJson(
         merged_tier_3_gdf,
         style_function=lambda x: {
-            'fillColor': '#FFD43B',
+            'fillColor': 'none',
+            'fill': False,
             'color': '#F59F00',
             'weight': 2,
-            'fillOpacity': 0.15
+            'opacity': 0.4
         },
         tooltip="Tier 3: G-MU-3x (3 stories, ≤1,980ft from station)"
     ).add_to(ballot_tier_3_group)
@@ -555,24 +543,15 @@ try:
         </div>
         """
         
-        # Add station marker to feature group to avoid macro_element spam
-        # Use custom HTML icon for smaller size (50% of default)
-        icon_html = '''
-        <div style="font-size: 18px; color: #d63031; text-shadow: 1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white, -1px 1px 2px white;">
-            <i class="fa fa-train"></i>
-        </div>
-        '''
-        
+        # Use standard Leaflet marker (blue pin)
         folium.Marker(
             location=[station.geometry.y, station.geometry.x],
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=station_name,
-            icon=folium.DivIcon(html=icon_html)
+            tooltip=station_name
         ).add_to(stations_group)
     
     stations_group.add_to(m)
-    buffer_half_mile_group.add_to(m)
-    buffer_quarter_mile_group.add_to(m)
+    buffer_three_eighths_mile_group.add_to(m)
     print("   ✓ Added stations with merged buffer circles")
 except Exception as e:
     print(f"   - Stations not found, skipping: {e}")
@@ -770,8 +749,8 @@ title_html = '''
                 } else if (text.includes('Tier 1:') || text.includes('Tier 2:') || text.includes('Tier 3:')) {
                     // Hide ballot measure tier circles
                     if (checkbox && checkbox.checked) checkbox.click();
-                } else if (text.includes('1/2 Mile') || text.includes('1/4 Mile')) {
-                    // Show standard transit buffers
+                } else if (text.includes('3/8 Mile')) {
+                    // Show standard 3/8 mile buffer
                     if (checkbox && !checkbox.checked) checkbox.click();
                 }
             });
@@ -800,8 +779,8 @@ title_html = '''
                 } else if (text.includes('Tier 1:') || text.includes('Tier 2:') || text.includes('Tier 3:')) {
                     // Show ballot measure tier circles
                     if (checkbox && !checkbox.checked) checkbox.click();
-                } else if (text.includes('1/2 Mile') || text.includes('1/4 Mile')) {
-                    // Hide standard transit buffers
+                } else if (text.includes('3/8 Mile')) {
+                    // Hide standard 3/8 mile buffer
                     if (checkbox && checkbox.checked) checkbox.click();
                 }
             });
