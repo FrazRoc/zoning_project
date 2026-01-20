@@ -28,10 +28,23 @@ print("="*70)
 
 print("\n1. Loading data...")
 zoning = gpd.read_file('ODC_ZONE_ZONING_A_-6072697703037489513.geojson')
-parcels = gpd.read_file('high_opportunity_parcels_v2.geojson')
+parcels = gpd.read_file('ballot_measure_parcels.geojson')
 
 print(f"   ✓ Loaded {len(zoning):,} zoning districts")
-print(f"   ✓ Loaded {len(parcels):,} opportunity parcels")
+print(f"   ✓ Loaded {len(parcels):,} parcels (with ballot measure data)")
+
+# Create two datasets for toggle
+current_parcels = parcels[parcels['opportunity_type'] != 'Industrial Near Transit'].copy()
+ballot_parcels = parcels.copy()
+
+# Calculate stats
+current_units = current_parcels['potential_units'].sum()
+ballot_units = ballot_parcels['ballot_potential_units'].sum()
+increase = ballot_units - current_units
+increase_pct = (increase / current_units) * 100
+
+print(f"   Current scenario: {len(current_parcels):,} parcels, {current_units:,.0f} units")
+print(f"   Ballot scenario: {len(ballot_parcels):,} parcels, {ballot_units:,.0f} units (+{increase_pct:.1f}%)")
 
 # ============================================================================
 # OFFICIAL DENVER ZONING COLORS
@@ -144,18 +157,19 @@ DISPLAY_NAMES = {
     'Teardown Candidate': 'Teardown Candidate'
 }
 
-# Create separate layer for each opportunity type
+# Create CURRENT scenario layers (hidden by default)
+print("\n4a. Adding CURRENT scenario parcel layers...")
 for opp_type, color in PARCEL_COLORS.items():
-    layer_parcels = parcels[parcels['opportunity_type'] == opp_type]
+    layer_parcels = current_parcels[current_parcels['opportunity_type'] == opp_type]
     
     if len(layer_parcels) == 0:
         continue
     
-    print(f"   - {opp_type}: {len(layer_parcels):,} parcels")
+    print(f"   - {opp_type} (Current): {len(layer_parcels):,} parcels")
     
     # Use display name for the layer
     display_name = DISPLAY_NAMES[opp_type]
-    layer = folium.FeatureGroup(name=display_name, show=True)
+    layer = folium.FeatureGroup(name=f'{display_name} (Current)', show=True)
     
     for idx, row in layer_parcels.iterrows():
         # Create popup with details
@@ -174,24 +188,162 @@ for opp_type, color in PARCEL_COLORS.items():
             far_explanation = f"Max FAR: {max_far:.1f}"
         
         popup_html = f"""
-        <div style="width: 320px; font-family: Arial, sans-serif;">
-            <div style="background-color: {color}; padding: 8px; margin: -10px -10px 10px -10px;">
-                <h4 style="margin: 0; color: white;">{row.get('SITUS_ADDRESS_LINE1', 'No Address')}</h4>
+        <div class="w-80 font-sans">
+            <div class="px-4 py-3 rounded-t-lg" style="background-color: {color};">
+                <h4 class="text-white font-bold text-base m-0 pr-8">{row.get('SITUS_ADDRESS_LINE1', 'No Address')}</h4>
             </div>
-            <div style="font-size: 13px;">
-                <b>Opportunity:</b> {display_name}<br>
-                <b>Zoning:</b> {zone}<br>
-                <b>Size:</b> {row.get('land_area_acres', 0):.2f} acres ({row.get('land_area_sf', 0):,.0f} sq ft)<br>
-                <hr style="margin: 8px 0;">
-                <b>Property Type:</b> {row.get('D_CLASS_CN', 'N/A')}<br>
-                <b>Owner:</b> {str(row.get('OWNER_NAME', 'N/A'))[:45]}<br>
-                <b>Building Value:</b> ${row.get('APPRAISED_IMP_VALUE', 0):,.0f}<br>
-                <b>Land Value:</b> ${row.get('APPRAISED_LAND_VALUE', 0):,.0f}<br>
-                <b>Total Building SF:</b> {row.get('total_bldg_sf', 0):,.0f}<br>
-                <hr style="margin: 8px 0;">
-                <b>Development Potential:</b><br>
-                {far_explanation}<br>
-                Est. Units: ~{int(row.get('potential_units', 0)):,}
+            <div class="text-sm space-y-2 p-4">
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Opportunity:</span>
+                    <span class="text-gray-900 font-sans" title="{display_name}">{display_name}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Current Zoning:</span>
+                    <span class="text-gray-900 font-sans" title="{zone}">{zone}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Size:</span>
+                    <span class="text-gray-900 font-sans" title="{row.get('land_area_acres', 0):.2f} acres ({row.get('land_area_sf', 0):,.0f} sq ft)">{row.get('land_area_acres', 0):.2f} acres ({row.get('land_area_sf', 0):,.0f} sq ft)</span>
+                </div>
+                
+                <div class="border-t border-gray-200 pt-2 mt-2"></div>
+                
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Property Type:</span>
+                    <span class="text-gray-900 font-sans truncate" title="{row.get('D_CLASS_CN', 'N/A')}">{row.get('D_CLASS_CN', 'N/A')}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Owner:</span>
+                    <span class="text-gray-900 font-sans truncate" title="{str(row.get('OWNER_NAME', 'N/A'))}">{str(row.get('OWNER_NAME', 'N/A'))[:45]}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Building Value:</span>
+                    <span class="text-gray-900 font-sans" title="${row.get('APPRAISED_IMP_VALUE', 0):,.0f}">${row.get('APPRAISED_IMP_VALUE', 0):,.0f}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Land Value:</span>
+                    <span class="text-gray-900 font-sans" title="${row.get('APPRAISED_LAND_VALUE', 0):,.0f}">${row.get('APPRAISED_LAND_VALUE', 0):,.0f}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Total Building SF:</span>
+                    <span class="text-gray-900 font-sans" title="{row.get('total_bldg_sf', 0):,.0f}">{row.get('total_bldg_sf', 0):,.0f}</span>
+                </div>
+                
+                <div class="border-t border-gray-200 pt-2 mt-2"></div>
+                
+                <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <div class="font-semibold text-gray-800 mb-1">Development Potential</div>
+                    <div class="text-gray-700">{far_explanation}</div>
+                    <div class="text-lg font-bold text-blue-600 mt-1">~{int(row.get('potential_units', 0)):,} units</div>
+                </div>
+            </div>
+        </div>
+        """
+        
+        folium.GeoJson(
+            row.geometry,
+            style_function=lambda x, c=color: {
+                'fillColor': c,
+                'color': '#FFFFFF',  # White border for better visibility
+                'weight': 2,
+                'fillOpacity': 0.6
+            },
+            popup=folium.Popup(popup_html, max_width=350)
+        ).add_to(layer)
+    
+    layer.add_to(m)
+
+# Create BALLOT scenario layers (visible by default)
+print("\n4b. Adding BALLOT scenario parcel layers...")
+for opp_type, color in PARCEL_COLORS.items():
+    layer_parcels = ballot_parcels[ballot_parcels['opportunity_type'] == opp_type]
+    
+    if len(layer_parcels) == 0:
+        continue
+    
+    print(f"   - {opp_type} (Ballot): {len(layer_parcels):,} parcels")
+    
+    # Use display name for the layer
+    display_name = DISPLAY_NAMES[opp_type]
+    layer = folium.FeatureGroup(name=f'{display_name} (Ballot)', show=False)
+    
+    for idx, row in layer_parcels.iterrows():
+        # Create popup with details
+        zone = row.get('ZONE_DISTRICT', 'N/A')
+        ballot_zone = row.get('ballot_zone', zone)
+        max_far = row.get('max_far', 2.0)
+        ballot_far = row.get('ballot_far', max_far)
+        
+        # Convert to float to avoid type errors
+        try:
+            ballot_far = float(ballot_far) if ballot_far is not None else 2.0
+        except (ValueError, TypeError):
+            ballot_far = 2.0
+        
+        # Denver zoning: numbers in zone names indicate story height, not FAR
+        # Exception: I-A and I-B have actual FAR limits of 2.0
+        if str(ballot_zone).upper() in ['I-A', 'I-B']:
+            far_explanation = f"Max FAR: {ballot_far:.1f}"
+        elif ballot_far > 0 and ballot_far != 2.0:
+            # Zones with numbers (MX-8, I-MX-5, MS-3, etc.) indicate story height
+            far_explanation = f"Max Height: {ballot_far:.0f} stories"
+        else:
+            # Default case (FAR 2.0 zones without explicit height in name)
+            far_explanation = f"Max FAR: {ballot_far:.1f}"
+        
+        popup_html = f"""
+        <div class="w-80 font-sans">
+            <div class="px-4 py-3 rounded-t-lg" style="background-color: {color};">
+                <h4 class="text-white font-bold text-base m-0 pr-8">{row.get('SITUS_ADDRESS_LINE1', 'No Address')}</h4>
+            </div>
+            <div class="text-sm space-y-2 p-4">
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Opportunity:</span>
+                    <span class="text-gray-900 font-sans" title="{display_name}">{display_name}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Current Zoning:</span>
+                    <span class="text-gray-900 font-sans" title="{zone}">{zone}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Ballot Zoning:</span>
+                    <span class="text-orange-600 font-bold font-sans" title="{ballot_zone}">{ballot_zone}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Size:</span>
+                    <span class="text-gray-900 font-sans" title="{row.get('land_area_acres', 0):.2f} acres ({row.get('land_area_sf', 0):,.0f} sq ft)">{row.get('land_area_acres', 0):.2f} acres ({row.get('land_area_sf', 0):,.0f} sq ft)</span>
+                </div>
+                
+                <div class="border-t border-gray-200 pt-2 mt-2"></div>
+                
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Property Type:</span>
+                    <span class="text-gray-900 font-sans truncate" title="{row.get('D_CLASS_CN', 'N/A')}">{row.get('D_CLASS_CN', 'N/A')}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Owner:</span>
+                    <span class="text-gray-900 font-sans truncate" title="{str(row.get('OWNER_NAME', 'N/A'))}">{str(row.get('OWNER_NAME', 'N/A'))[:45]}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Building Value:</span>
+                    <span class="text-gray-900 font-sans" title="${row.get('APPRAISED_IMP_VALUE', 0):,.0f}">${row.get('APPRAISED_IMP_VALUE', 0):,.0f}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Land Value:</span>
+                    <span class="text-gray-900 font-sans" title="${row.get('APPRAISED_LAND_VALUE', 0):,.0f}">${row.get('APPRAISED_LAND_VALUE', 0):,.0f}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="font-semibold text-gray-700">Total Building SF:</span>
+                    <span class="text-gray-900 font-sans" title="{row.get('total_bldg_sf', 0):,.0f}">{row.get('total_bldg_sf', 0):,.0f}</span>
+                </div>
+                
+                <div class="border-t border-gray-200 pt-2 mt-2"></div>
+                
+                <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                    <div class="font-semibold text-gray-800 mb-1">Development Potential (Ballot)</div>
+                    <div class="text-gray-700">{far_explanation}</div>
+                    <div class="text-lg font-bold text-green-600 mt-1">~{int(row.get('ballot_potential_units', 0)):,} units</div>
+                </div>
             </div>
         </div>
         """
@@ -282,19 +434,39 @@ try:
     half_mile_buffers = []
     quarter_mile_buffers = []
     
+    # NEW: Ballot measure tier buffers
+    tier_1_buffers = []  # 660ft (C-MX-8x)
+    tier_2_buffers = []  # 1,320ft (G-RX-5x)
+    tier_3_buffers = []  # 1,980ft (G-MU-3x)
+    
     for idx, station in stations_projected.iterrows():
         # Create buffers in projected CRS (meters)
         half_mile_buffers.append(station.geometry.buffer(804.67))  # 1/2 mile
         quarter_mile_buffers.append(station.geometry.buffer(402.34))  # 1/4 mile
+        
+        # Ballot measure tiers
+        tier_1_buffers.append(station.geometry.buffer(201.17))   # 660ft
+        tier_2_buffers.append(station.geometry.buffer(402.34))   # 1,320ft
+        tier_3_buffers.append(station.geometry.buffer(603.50))   # 1,980ft
     
     # Merge overlapping buffers using unary_union
     from shapely.ops import unary_union
     merged_half_mile = unary_union(half_mile_buffers)
     merged_quarter_mile = unary_union(quarter_mile_buffers)
     
+    # Merge ballot measure tiers
+    merged_tier_1 = unary_union(tier_1_buffers)
+    merged_tier_2 = unary_union(tier_2_buffers)
+    merged_tier_3 = unary_union(tier_3_buffers)
+    
     # Convert back to WGS84 for display
     merged_half_gdf = gpd.GeoDataFrame({'geometry': [merged_half_mile]}, crs='EPSG:32613').to_crs('EPSG:4326')
     merged_quarter_gdf = gpd.GeoDataFrame({'geometry': [merged_quarter_mile]}, crs='EPSG:32613').to_crs('EPSG:4326')
+    
+    # Convert ballot tiers to WGS84
+    merged_tier_1_gdf = gpd.GeoDataFrame({'geometry': [merged_tier_1]}, crs='EPSG:32613').to_crs('EPSG:4326')
+    merged_tier_2_gdf = gpd.GeoDataFrame({'geometry': [merged_tier_2]}, crs='EPSG:32613').to_crs('EPSG:4326')
+    merged_tier_3_gdf = gpd.GeoDataFrame({'geometry': [merged_tier_3]}, crs='EPSG:32613').to_crs('EPSG:4326')
     
     # Add merged 1/2 mile buffer (dashed line)
     folium.GeoJson(
@@ -322,6 +494,54 @@ try:
     ).add_to(buffer_quarter_mile_group)
     
     print("   ✓ Added merged buffer zones")
+    
+    # NEW: Create ballot measure tier circle groups (hidden by default)
+    ballot_tier_1_group = folium.FeatureGroup(name='Tier 1: C-MX-8x (660ft)', show=False)
+    ballot_tier_2_group = folium.FeatureGroup(name='Tier 2: G-RX-5x (1,320ft)', show=False)
+    ballot_tier_3_group = folium.FeatureGroup(name='Tier 3: G-MU-3x (1,980ft)', show=False)
+    
+    # Add Tier 1 (innermost - red)
+    folium.GeoJson(
+        merged_tier_1_gdf,
+        style_function=lambda x: {
+            'fillColor': '#FF6B6B',
+            'color': '#C92A2A',
+            'weight': 2,
+            'fillOpacity': 0.15
+        },
+        tooltip="Tier 1: C-MX-8x (8 stories, ≤660ft from station)"
+    ).add_to(ballot_tier_1_group)
+    
+    # Add Tier 2 (middle - orange)
+    folium.GeoJson(
+        merged_tier_2_gdf,
+        style_function=lambda x: {
+            'fillColor': '#FFA94D',
+            'color': '#E67700',
+            'weight': 2,
+            'fillOpacity': 0.15
+        },
+        tooltip="Tier 2: G-RX-5x (5 stories, ≤1,320ft from station)"
+    ).add_to(ballot_tier_2_group)
+    
+    # Add Tier 3 (outermost - yellow)
+    folium.GeoJson(
+        merged_tier_3_gdf,
+        style_function=lambda x: {
+            'fillColor': '#FFD43B',
+            'color': '#F59F00',
+            'weight': 2,
+            'fillOpacity': 0.15
+        },
+        tooltip="Tier 3: G-MU-3x (3 stories, ≤1,980ft from station)"
+    ).add_to(ballot_tier_3_group)
+    
+    # Add tier groups to map
+    ballot_tier_1_group.add_to(m)
+    ballot_tier_2_group.add_to(m)
+    ballot_tier_3_group.add_to(m)
+    
+    print("   ✓ Added ballot measure tier circles")
     
     # Add individual station markers
     for idx, station in stations.iterrows():
@@ -364,74 +584,74 @@ except Exception as e:
 print("\n6. Adding legend...")
 
 legend_html = '''
-<div id="legend" style="position: fixed; bottom: 10px; left: 10px; width: 260px; 
-     background-color: white; border: 2px solid grey; z-index: 9999; 
-     font-size: 12px; border-radius: 5px;">
-    <div id="legend-content" style="padding: 8px;">
-        <h4 style="margin: 0 0 5px 0; font-size: 14px; cursor: pointer;" 
-            onclick="this.parentElement.style.display = 
-                     this.parentElement.style.display === 'none' ? 'block' : 'none'; 
-                     document.getElementById('legend-toggle').style.display = 'block';">
-            Upzoning Opportunities <span style="float: right; font-size: 12px;">▼</span>
+<div id="legend" class="fixed bottom-3 left-3 w-72 bg-white rounded-lg shadow-lg z-[9999]">
+    <div id="legend-content" class="p-4">
+        <h4 class="text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200 cursor-pointer flex items-center justify-between" 
+            onclick="this.parentElement.style.display = 'none'; document.getElementById('legend-toggle').style.display = 'block';">
+            <span>Upzoning Opportunities</span>
+            <span class="text-gray-400">▼</span>
         </h4>
-        <div style="margin-bottom: 4px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FF0000; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">Large Vacant Land ({:,})</span>
+        
+        <!-- Opportunity Types -->
+        <div class="space-y-2 mb-3">
+            <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF0000;"></span>
+                <span class="text-xs text-gray-700">Large Vacant Land ({:,})</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF8C00;"></span>
+                <span class="text-xs text-gray-700">SF on Multi-Unit Zoning ({:,})</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #00CED1;"></span>
+                <span class="text-xs text-gray-700">Commercial on Mixed-Use ({:,})</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #9370DB;"></span>
+                <span class="text-xs text-gray-700">Industrial Conversion ({:,})</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF69B4;"></span>
+                <span class="text-xs text-gray-700">Industrial Needs Rezoning ({:,})</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FFD700;"></span>
+                <span class="text-xs text-gray-700">Teardown Candidates ({:,})</span>
+            </div>
         </div>
-        <div style="margin-bottom: 4px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FF8C00; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">SF on Multi-Unit Zoning ({:,})</span>
-        </div>
-        <div style="margin-bottom: 4px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #00CED1; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">Commercial on Mixed-Use ({:,})</span>
-        </div>
-        <div style="margin-bottom: 4px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #9370DB; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">Industrial Conversion ({:,})</span>
-        </div>
-        <div style="margin-bottom: 4px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FF69B4; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">Industrial Needs Rezoning ({:,})</span>
-        </div>
-        <div style="margin-bottom: 6px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FFD700; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">Teardown Candidates ({:,})</span>
-        </div>
-        <hr style="margin: 6px 0;">
-        <h4 style="margin: 5px 0 4px 0; font-size: 13px;">Zoning Categories</h4>
-        <div style="margin-bottom: 3px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #E60000; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">Downtown</span>
-        </div>
-        <div style="margin-bottom: 3px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FF6A00; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">Mixed Use</span>
-        </div>
-        <div style="margin-bottom: 3px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FFD700; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">Multi Unit</span>
-        </div>
-        <div style="margin-bottom: 3px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FFF4C3; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">Single Unit</span>
-        </div>
-        <div style="margin-bottom: 6px; display: flex; align-items: center;">
-            <span style="display: inline-block; width: 16px; height: 16px; background-color: #C9BDFF; margin-right: 6px; border: 1px solid #ccc;"></span>
-            <span style="font-size: 11px;">Industrial</span>
-        </div>
-        <hr style="margin: 6px 0;">
-        <div style="font-size: 10px; color: #666; line-height: 1.4;">
-            <b>Total:</b> {:,} parcels, {:,} acres<br>
-            <b>Potential Units:</b> ~{:,}<br>
-            <span style="font-size: 9px; font-style: italic;">
-            (1,500 sf/unit incl. common areas)
-            </span>
+        
+        <!-- Zoning Categories -->
+        <div class="border-t border-gray-200 pt-3 mb-3">
+            <h5 class="text-xs font-semibold text-gray-700 mb-2">Zoning Categories</h5>
+            <div class="space-y-1.5">
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #E60000;"></span>
+                    <span class="text-xs text-gray-600">Downtown</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF6A00;"></span>
+                    <span class="text-xs text-gray-600">Mixed Use</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FFD700;"></span>
+                    <span class="text-xs text-gray-600">Multi Unit</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FFF4C3;"></span>
+                    <span class="text-xs text-gray-600">Single Unit</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #C9BDFF;"></span>
+                    <span class="text-xs text-gray-600">Industrial</span>
+                </div>
+            </div>
         </div>
     </div>
-    <div id="legend-toggle" style="display: none; padding: 8px; cursor: pointer; text-align: center; background-color: #f0f0f0; border-top: 1px solid grey;"
+    
+    <!-- Collapsed state -->
+    <div id="legend-toggle" class="hidden p-3 cursor-pointer text-center bg-gray-50 rounded-b-lg border-t border-gray-200 hover:bg-gray-100 transition-colors"
          onclick="document.getElementById('legend-content').style.display = 'block'; this.style.display = 'none';">
-        <span style="font-size: 12px;">▲ Show Legend</span>
+        <span class="text-xs text-gray-600">▲ Show Legend</span>
     </div>
 </div>
 '''.format(
@@ -441,9 +661,8 @@ legend_html = '''
     len(parcels[parcels['opportunity_type'] == 'Industrial Conversion']),
     len(parcels[parcels['opportunity_type'] == 'Industrial Near Transit']),
     len(parcels[parcels['opportunity_type'] == 'Teardown Candidate']),
-    len(parcels),
-    int(parcels['land_area_acres'].sum()),
-    int(parcels['potential_units'].sum())
+    len(current_parcels),  # Use current_parcels for default display
+    int(current_parcels['potential_units'].sum())  # Use current units for default display
 )
 
 m.get_root().html.add_child(folium.Element(legend_html))
@@ -470,6 +689,7 @@ with open(output_file, 'r') as f:
 
 # Insert title CSS and HTML right after the <body> tag
 title_html = '''
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
     /* Move Leaflet zoom controls to top right */
     .leaflet-top.leaflet-left {
@@ -478,49 +698,121 @@ title_html = '''
         left: auto !important;
     }
     
-    .map-title {
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        z-index: 1000;
-        background-color: white;
-        padding: 10px 15px;
-        border-radius: 5px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        font-family: Arial, sans-serif;
-        max-width: 280px;
+    /* Fix Leaflet popup padding and style close button */
+    .leaflet-popup-content-wrapper {
+        padding: 0 !important;
+        border-radius: 0.75rem !important;
+        overflow: hidden;
     }
-    .map-title h1 {
-        margin: 0;
-        font-size: 16px;
-        color: #333;
-        font-weight: bold;
-        line-height: 1.3;
+    
+    .leaflet-popup-content {
+        margin: 0 !important;
+        width: 100% !important;
     }
-    .map-title p {
-        margin: 3px 0 0 0;
-        font-size: 11px;
-        color: #666;
-        line-height: 1.2;
+    
+    /* Style and reposition Leaflet's default close button */
+    .leaflet-popup-close-button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: absolute !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        right: 16px !important;
+        margin: auto !important;
+        z-index: 10 !important;
+        color: white !important;
+        font-size: 28px !important;
+        font-weight: 300 !important;
+        text-shadow: none !important;
+        width: auto !important;
+        height: fit-content !important;
+        padding: 0 !important;
+        background: none !important;
+        border: none !important;
+        line-height: 1 !important;
     }
-    .map-title .nav-links {
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid #e0e0e0;
-        display: flex;
-        gap: 12px;
-        font-size: 11px;
-    }
-    .map-title .nav-links a {
-        color: #3498db;
-        text-decoration: none;
-        font-weight: 500;
-    }
-    .map-title .nav-links a:hover {
-        text-decoration: underline;
+    
+    .leaflet-popup-close-button:hover {
+        color: rgba(255, 255, 255, 0.8) !important;
     }
 </style>
 <script>
+    // Toggle between current and ballot measure scenarios
+    var currentScenario = 'current';  // Start with CURRENT zoning visible
+
+    function toggleScenario(scenario) {
+        if (scenario === currentScenario) return; // Already on this scenario
+        
+        currentScenario = scenario;
+        
+        // Update button styles
+        var currentBtn = document.getElementById('btn-current');
+        var ballotBtn = document.getElementById('btn-ballot');
+        var statsBox = document.getElementById('stats-box');
+        
+        if (scenario === 'current') {
+            // Style current button as active
+            currentBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-blue-600 shadow-md';
+            ballotBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all text-white hover:bg-white/10';
+            
+            // Update stats
+            statsBox.innerHTML = '<div class="text-xs text-blue-100 space-y-0.5"><div><span class="text-white font-bold text-lg">2,131</span> <span class="text-blue-200">developable parcels</span></div><div><span class="text-white font-bold text-lg">~440K</span> <span class="text-blue-200">potential housing units</span></div></div>';
+            
+            // Hide ballot layers, show current layers
+            document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(function(label) {
+                var text = label.textContent.trim();
+                var checkbox = label.querySelector('input[type="checkbox"]');
+                if (text.includes('(Ballot)')) {
+                    if (checkbox && checkbox.checked) checkbox.click();
+                } else if (text.includes('(Current)')) {
+                    if (checkbox && !checkbox.checked) checkbox.click();
+                } else if (text.includes('Tier 1:') || text.includes('Tier 2:') || text.includes('Tier 3:')) {
+                    // Hide ballot measure tier circles
+                    if (checkbox && checkbox.checked) checkbox.click();
+                } else if (text.includes('1/2 Mile') || text.includes('1/4 Mile')) {
+                    // Show standard transit buffers
+                    if (checkbox && !checkbox.checked) checkbox.click();
+                }
+            });
+            
+            // Update legend
+            document.getElementById('legend-units').innerHTML = '439,845';
+            document.getElementById('legend-parcels').innerHTML = '2,131';
+            document.getElementById('legend-note').innerHTML = 'Legally developable today';
+            
+        } else {
+            // Style ballot button as active
+            currentBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all text-white hover:bg-white/10';
+            ballotBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-blue-600 shadow-md';
+            
+            // Update stats
+            statsBox.innerHTML = '<div class="text-xs text-blue-100 space-y-0.5"><div><span class="text-white font-bold text-lg">2,521</span> <span class="text-blue-200">developable parcels</span></div><div><span class="text-white font-bold text-lg">~534K</span> <span class="text-blue-200">potential housing units</span></div><div class="text-green-300 font-semibold mt-1">+94K units (+21%)</div></div>';
+            
+            // Hide current layers, show ballot layers
+            document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(function(label) {
+                var text = label.textContent.trim();
+                var checkbox = label.querySelector('input[type="checkbox"]');
+                if (text.includes('(Current)')) {
+                    if (checkbox && checkbox.checked) checkbox.click();
+                } else if (text.includes('(Ballot)')) {
+                    if (checkbox && !checkbox.checked) checkbox.click();
+                } else if (text.includes('Tier 1:') || text.includes('Tier 2:') || text.includes('Tier 3:')) {
+                    // Show ballot measure tier circles
+                    if (checkbox && !checkbox.checked) checkbox.click();
+                } else if (text.includes('1/2 Mile') || text.includes('1/4 Mile')) {
+                    // Hide standard transit buffers
+                    if (checkbox && checkbox.checked) checkbox.click();
+                }
+            });
+            
+            // Update legend
+            document.getElementById('legend-units').innerHTML = '534,032';
+            document.getElementById('legend-parcels').innerHTML = '2,521';
+            document.getElementById('legend-note').innerHTML = '<strong>+94,187 units (+21.4%)</strong> vs. current zoning';
+        }
+    }
+
     // Remove rail lines and stations from layer control after page loads
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() {
@@ -536,12 +828,49 @@ title_html = '''
         }, 100);
     });
 </script>
-<div class="map-title">
-    <h1>Mile High Potential</h1>
-    <p>Finding development opportunities in Denver among its transit network</p>
-    <div class="nav-links">
-        <a href="about.html">About</a>
-        <a href="https://github.com/FrazRoc/zoning_project" target="_blank">GitHub</a>
+
+<!-- Unified Title & Toggle Component -->
+<div class="fixed top-3 left-3 z-[1000] bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl shadow-2xl max-w-md">
+    <div class="p-4">
+        <!-- Title -->
+        <div class="mb-3">
+            <h1 class="text-3xl font-black mb-1">Mile High Potential</h1>
+            <p class="text-sm text-blue-100 leading-tight">Transit-oriented development opportunities in Denver</p>
+        </div>
+        
+        <!-- Segmented Control Toggle -->
+        <div class="bg-blue-800/40 rounded-lg p-1 mb-3 backdrop-blur-sm">
+            <div class="grid grid-cols-2 gap-1">
+                <button id="btn-current" 
+                        onclick="toggleScenario('current')"
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-blue-600 shadow-md">
+                    Current Zoning
+                </button>
+                <button id="btn-ballot"
+                        onclick="toggleScenario('ballot')"
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-white hover:bg-white/10">
+                    After Ballot
+                </button>
+            </div>
+        </div>
+        
+        <!-- Stats Display -->
+        <div id="stats-box" class="text-center px-2">
+            <div class="text-xs text-blue-100 space-y-0.5">
+                <div><span class="text-white font-bold text-lg">2,131</span> <span class="text-blue-200">developable parcels</span></div>
+                <div><span class="text-white font-bold text-lg">~440K</span> <span class="text-blue-200">potential housing units</span></div>
+            </div>
+        </div>
+        
+        <!-- About Link -->
+        <div class="mt-3 pt-3 border-t border-blue-500/30">
+            <a href="about.html" class="text-sm text-blue-100 hover:text-white font-medium transition-colors flex items-center justify-center gap-1">
+                <span>About this project</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                </svg>
+            </a>
+        </div>
     </div>
 </div>
 '''

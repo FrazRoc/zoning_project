@@ -192,23 +192,34 @@
         <div class="content">
             <h2>About This Project</h2>
             <p>
-                Mile High Potential is an interactive mapping tool that identifies over 2,500 parcels near RTD light rail stations 
-                with significant redevelopment potential. By visualizing opportunities for transit-oriented development (TOD), 
-                this project aims to support Denver's housing goals and promote sustainable, equitable growth.
+                Mile High Potential is an interactive mapping tool that visualizes the transformative impact of a proposed 
+                YIMBY Denver ballot initiative. The map allows you to toggle between two scenarios:
+            </p>
+            
+            <div class="highlight-box">
+                <strong>Current Zoning:</strong> Shows 2,131 parcels that are legally developable today with potential for 
+                ~440,000 housing units near RTD light rail stations.<br><br>
+                <strong>After Ballot Measure:</strong> Shows 2,521 parcels (including newly upzoned industrial land) with 
+                potential for ~534,000 housing units — an increase of <strong>+94,187 units (+21.4%)</strong>.
+            </div>
+            
+            <p>
+                By comparing these scenarios side-by-side, you can see exactly how the ballot measure would unlock 
+                housing potential across Denver's transit network.
             </p>
             
             <div class="stats">
                 <div class="stat-box">
+                    <span class="number">2,131</span>
+                    <span class="label">Current Opportunity Parcels</span>
+                </div>
+                <div class="stat-box">
                     <span class="number">2,521</span>
-                    <span class="label">Opportunity Parcels</span>
+                    <span class="label">After Ballot Measure</span>
                 </div>
                 <div class="stat-box">
-                    <span class="number">2,875</span>
-                    <span class="label">Acres of Land</span>
-                </div>
-                <div class="stat-box">
-                    <span class="number">~488K</span>
-                    <span class="label">Potential Units</span>
+                    <span class="number">+21.4%</span>
+                    <span class="label">Housing Capacity Increase</span>
                 </div>
             </div>
             
@@ -259,6 +270,31 @@
                 </div>
             </div>
             
+            <h2>Ballot Measure Zoning Tiers</h2>
+            <p>The proposed ballot initiative would create three tiers of upzoning based on distance from RTD light rail stations:</p>
+            
+            <div class="category-list">
+                <div class="category-item" style="border-left-color: #C92A2A;">
+                    <h4>Tier 1: C-MX-8x (≤660 feet)</h4>
+                    <p><strong>8 stories</strong> within 660 feet of rail stations. The highest density tier for areas immediately adjacent to transit.</p>
+                </div>
+                
+                <div class="category-item" style="border-left-color: #E67700;">
+                    <h4>Tier 2: G-RX-5x (≤1,320 feet)</h4>
+                    <p><strong>5 stories</strong> within a quarter mile of rail stations. Medium density for the walkable core around transit.</p>
+                </div>
+                
+                <div class="category-item" style="border-left-color: #F59F00;">
+                    <h4>Tier 3: G-MU-3x (≤1,980 feet)</h4>
+                    <p><strong>3 stories</strong> within roughly 3/8 mile of rail stations. Gentle density increase for the outer transit-accessible area.</p>
+                </div>
+            </div>
+            
+            <p>
+                <strong>Important:</strong> The ballot measure only <em>upzones</em> — existing zoning that is more permissive is preserved. 
+                This protects areas that already allow taller buildings while bringing lower-density areas up to transit-appropriate heights.
+            </p>
+            
             <h2>Methodology</h2>
             
             <h3>Data Sources</h3>
@@ -277,7 +313,7 @@
                 <li><strong>Exclusions:</strong> Public land, parks, right-of-ways, existing apartment buildings, and narrow parcels (railroad corridors)</li>
             </ul>
             
-            <h3>Unit Calculations</h3>
+            <h3>Unit Calculations & Scenario Comparison</h3>
             <p>
                 Potential housing units are estimated conservatively using each parcel's maximum allowed Floor Area Ratio (FAR) 
                 or story height from Denver's zoning code. We assume 1,500 gross square feet per unit, which accounts for:
@@ -285,6 +321,21 @@
             <ul>
                 <li>Average unit size of ~900 sq ft (mix of studios, 1BR, 2BR)</li>
                 <li>Building efficiency of ~60% (common areas, lobbies, elevators, parking, mechanical)</li>
+            </ul>
+            
+            <p><strong>Current Zoning Scenario:</strong></p>
+            <ul>
+                <li>Includes only parcels that are <em>legally developable today</em> for residential use</li>
+                <li>Excludes 390 "Industrial Needs Rezoning" parcels on I-A/I-B zoning (industrial use only)</li>
+                <li>Total: 2,131 parcels with ~440,000 potential units</li>
+            </ul>
+            
+            <p><strong>After Ballot Measure Scenario:</strong></p>
+            <ul>
+                <li>Applies ballot measure upzoning tiers based on distance to rail stations</li>
+                <li>Includes formerly industrial parcels that would be upzoned to residential/mixed-use</li>
+                <li>Preserves existing zoning if it's already more permissive (never downzones)</li>
+                <li>Total: 2,521 parcels with ~534,000 potential units (+21.4%)</li>
             </ul>
             
             <div class="highlight-box">
