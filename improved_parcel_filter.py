@@ -37,6 +37,49 @@ MIN_TEARDOWN_SIZE_SF = 3000  # Minimum lot size for teardown potential
 # PP < 0.3 for RTD/railroad/city vacant land (thin strips)
 # PP < 0.15 for general narrow ROW parcels
 
+# NEW: Stories to Units per Acre lookup (based on real-world development patterns)
+STORIES_TO_UPA = {
+    2: 30,
+    2.5: 35,
+    3: 60,
+    5: 100,
+    7: 160,
+    8: 160,
+    10: 160,
+    12: 220,
+    16: 280,
+    20: 350,
+    30: 450
+}
+
+def calculate_units_from_stories(land_area_acres, stories):
+    """
+    Calculate potential units using stories-to-units-per-acre lookup.
+    
+    Args:
+        land_area_acres: Land area in acres
+        stories: Number of stories (height limit from zoning)
+        
+    Returns:
+        Estimated potential units (rounded to nearest integer)
+    """
+    # Find closest story height in lookup table
+    if stories in STORIES_TO_UPA:
+        units_per_acre = STORIES_TO_UPA[stories]
+    else:
+        # Interpolate or use nearest value
+        story_heights = sorted(STORIES_TO_UPA.keys())
+        if stories < min(story_heights):
+            units_per_acre = STORIES_TO_UPA[min(story_heights)]
+        elif stories > max(story_heights):
+            units_per_acre = STORIES_TO_UPA[max(story_heights)]
+        else:
+            # Find nearest story height
+            nearest = min(story_heights, key=lambda x: abs(x - stories))
+            units_per_acre = STORIES_TO_UPA[nearest]
+    
+    return round(land_area_acres * units_per_acre)
+
 # ============================================================================
 # LOAD DATA
 # ============================================================================
@@ -295,39 +338,31 @@ print(f"   ✓ Remaining: {len(parcels_filtered):,} parcels")
 
 print("\n3. Categorizing redevelopment opportunities...")
 
-def get_max_far(zone_district):
-    """Extract maximum FAR from zone district
+def get_max_stories(zone_district):
+    """Extract maximum story height from zone district
     
     Special handling:
-    - I-MX zones: No FAR limit, use story height as proxy (I-MX-8 = 8 stories = ~FAR 8.0)
-    - I-A, I-B zones: FAR 2.0 (per zoning code)
-    - MX, MS, RX, etc with numbers: Extract FAR from zone name
+    - I-MX zones: I-MX-3 = 3 stories, I-MX-5 = 5 stories, I-MX-8 = 8 stories, I-MX-12 = 12 stories
+    - I-A, I-B zones: 3 stories (typical for industrial conversions)
+    - C-MX, G-MU, G-RX, etc with numbers: Extract story height from zone name
     """
     try:
         zone = str(zone_district).upper()
         
-        # I-A and I-B have explicit FAR 2.0
+        # I-A and I-B: assume 3 stories if converted to residential
         if zone in ['I-A', 'I-B']:
-            return 2.0
+            return 3
         
-        # I-MX zones have no FAR but height limits - use stories as proxy for FAR
-        # I-MX-3 = 3 stories, I-MX-5 = 5 stories, I-MX-8 = 8 stories, I-MX-12 = 12 stories
-        if 'I-MX' in zone:
-            import re
-            matches = re.findall(r'(\d+)', zone)
-            if matches:
-                # For I-MX, story count is good proxy for FAR (each floor ~= 1.0 FAR)
-                return float(matches[-1])
-        
-        # For other zones (MX, MS, RX, etc), extract FAR from zone name
+        # All zones with numbers: extract the number as story height
+        # Examples: I-MX-8 = 8 stories, C-MX-12 = 12 stories, G-RX-5 = 5 stories
         import re
         matches = re.findall(r'(\d+)', zone)
         if matches:
-            # Get the last number (e.g., C-MX-12 -> 12)
-            return float(matches[-1])
+            # Get the last number (e.g., C-MX-12 -> 12, G-RX-5 -> 5)
+            return int(matches[-1])
     except:
         pass
-    return 2.0  # Default assumption
+    return 3  # Default assumption (3 stories = walk-up)
 
 # Calculate current FAR
 parcels_filtered['land_area_sf'] = parcels_filtered['LAND_AREA'].fillna(0)
@@ -342,8 +377,8 @@ parcels_filtered['current_far'] = parcels_filtered.apply(
     axis=1
 )
 
-# Get max FAR from zoning
-parcels_filtered['max_far'] = parcels_filtered['ZONE_DISTRICT'].apply(get_max_far)
+# Get max stories from zoning
+parcels_filtered['max_stories'] = parcels_filtered['ZONE_DISTRICT'].apply(get_max_stories)
 
 # Get units
 parcels_filtered['current_units'] = parcels_filtered['TOT_UNITS'].fillna(0)
@@ -361,14 +396,11 @@ large_vacant = parcels_filtered[
     (parcels_filtered['current_units'] == 0)
 ].copy()
 large_vacant['opportunity_type'] = 'Large Vacant Land'
-# Calculate potential units for each category
-# Conservative assumption: 1,500 gross sq ft per unit
-# This accounts for:
-# - Average unit size: ~900 sq ft
-# - Building efficiency: ~60% (40% for lobbies, halls, elevators, amenities, parking, etc.)
-# - Results in more realistic unit counts for TOD development
-
-large_vacant['potential_units'] = (large_vacant['land_area_acres'] * 43560 * large_vacant['max_far'] / 1500).round()
+# NEW: Calculate potential units using stories-to-units-per-acre lookup
+large_vacant['potential_units'] = large_vacant.apply(
+    lambda row: calculate_units_from_stories(row['land_area_acres'], row['max_stories']), 
+    axis=1
+)
 opportunities.append(large_vacant)
 print(f"   - Large Vacant Land: {len(large_vacant):,} parcels ({large_vacant['land_area_acres'].sum():.0f} acres)")
 
@@ -381,7 +413,10 @@ sf_on_mu = parcels_filtered[
     (parcels_filtered['current_far'] < 0.25)  # Very low density
 ].copy()
 sf_on_mu['opportunity_type'] = 'SF on Multi-Unit Zoning'
-sf_on_mu['potential_units'] = (sf_on_mu['land_area_acres'] * 43560 * sf_on_mu['max_far'] / 1500).round()
+sf_on_mu['potential_units'] = sf_on_mu.apply(
+    lambda row: calculate_units_from_stories(row['land_area_acres'], row['max_stories']), 
+    axis=1
+)
 opportunities.append(sf_on_mu)
 print(f"   - SF on Multi-Unit Zoning: {len(sf_on_mu):,} parcels ({sf_on_mu['land_area_acres'].sum():.0f} acres)")
 
@@ -394,7 +429,10 @@ comm_on_mu = parcels_filtered[
     (parcels_filtered['land_area_acres'] >= 0.25)  # At least quarter acre
 ].copy()
 comm_on_mu['opportunity_type'] = 'Commercial on Mixed-Use Zoning'
-comm_on_mu['potential_units'] = (comm_on_mu['land_area_acres'] * 43560 * comm_on_mu['max_far'] / 1500).round()
+comm_on_mu['potential_units'] = comm_on_mu.apply(
+    lambda row: calculate_units_from_stories(row['land_area_acres'], row['max_stories']), 
+    axis=1
+)
 opportunities.append(comm_on_mu)
 print(f"   - Commercial on Mixed-Use Zoning: {len(comm_on_mu):,} parcels ({comm_on_mu['land_area_acres'].sum():.0f} acres)")
 
@@ -403,10 +441,12 @@ industrial = parcels_filtered[
     (parcels_filtered['D_CLASS_CN'].str.contains('INDUSTRIAL|WAREHOUSE', na=False, case=False)) &
     (parcels_filtered['ZONE_DISTRICT'].str.contains('MU|MX|MS|IMX', na=False, case=False)) &
     (parcels_filtered['land_area_acres'] >= 0.25)
-    # NOTE: Removed FAR filter - industrial buildings can have FAR > 0.25 and still be conversion opportunities
 ].copy()
 industrial['opportunity_type'] = 'Industrial Conversion'
-industrial['potential_units'] = (industrial['land_area_acres'] * 43560 * industrial['max_far'] / 1500).round()
+industrial['potential_units'] = industrial.apply(
+    lambda row: calculate_units_from_stories(row['land_area_acres'], row['max_stories']), 
+    axis=1
+)
 opportunities.append(industrial)
 print(f"   - Industrial Conversion: {len(industrial):,} parcels ({industrial['land_area_acres'].sum():.0f} acres)")
 
@@ -418,7 +458,11 @@ industrial_transit = parcels_filtered[
     (parcels_filtered['land_area_acres'] >= 0.25)
 ].copy()
 industrial_transit['opportunity_type'] = 'Industrial Near Transit'
-industrial_transit['potential_units'] = (industrial_transit['land_area_acres'] * 43560 * 2.0 / 1500).round()  # Assume FAR 2.0 if upzoned
+# These would need rezoning - assume 3 stories if upzoned to residential
+industrial_transit['potential_units'] = industrial_transit.apply(
+    lambda row: calculate_units_from_stories(row['land_area_acres'], 3), 
+    axis=1
+)
 opportunities.append(industrial_transit)
 print(f"   - Industrial Near Transit: {len(industrial_transit):,} parcels ({industrial_transit['land_area_acres'].sum():.0f} acres)")
 
@@ -432,7 +476,10 @@ teardowns = parcels_filtered[
     (parcels_filtered['ZONE_DISTRICT'].str.contains('MU|MX|RH|RX', na=False, case=False))
 ].copy()
 teardowns['opportunity_type'] = 'Teardown Candidate'
-teardowns['potential_units'] = (teardowns['land_area_acres'] * 43560 * teardowns['max_far'] / 1500).round()
+teardowns['potential_units'] = teardowns.apply(
+    lambda row: calculate_units_from_stories(row['land_area_acres'], row['max_stories']), 
+    axis=1
+)
 opportunities.append(teardowns)
 print(f"   - Teardown Candidates: {len(teardowns):,} parcels ({teardowns['land_area_acres'].sum():.0f} acres)")
 

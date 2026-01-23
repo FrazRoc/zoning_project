@@ -543,11 +543,19 @@ try:
         </div>
         """
         
-        # Use standard Leaflet marker (blue pin)
+        # Use smaller Leaflet marker (60% of default size)
+        small_icon = folium.Icon(
+            icon='info-sign',
+            prefix='glyphicon',
+            color='blue',
+            icon_color='white'
+        )
+        
         folium.Marker(
             location=[station.geometry.y, station.geometry.x],
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=station_name
+            tooltip=station_name,
+            icon=small_icon
         ).add_to(stations_group)
     
     stations_group.add_to(m)
@@ -565,7 +573,7 @@ print("\n6. Adding legend...")
 legend_html = '''
 <div id="legend" class="fixed bottom-3 left-3 w-72 bg-white rounded-lg shadow-lg z-[9999]">
     <div id="legend-content" class="p-4">
-        <h4 class="text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200 cursor-pointer flex items-center justify-between" 
+        <h4 class="text-base font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200 cursor-pointer flex items-center justify-between" 
             onclick="this.parentElement.style.display = 'none'; document.getElementById('legend-toggle').style.display = 'block';">
             <span>Upzoning Opportunities</span>
             <span class="text-gray-400">▼</span>
@@ -575,53 +583,53 @@ legend_html = '''
         <div class="space-y-2 mb-3">
             <div class="flex items-center gap-2">
                 <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF0000;"></span>
-                <span class="text-xs text-gray-700">Large Vacant Land ({:,})</span>
+                <span class="text-sm text-gray-700">Large Vacant Land ({:,})</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF8C00;"></span>
-                <span class="text-xs text-gray-700">SF on Multi-Unit Zoning ({:,})</span>
+                <span class="text-sm text-gray-700">SF on Multi-Unit Zoning ({:,})</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #00CED1;"></span>
-                <span class="text-xs text-gray-700">Commercial on Mixed-Use ({:,})</span>
+                <span class="text-sm text-gray-700">Commercial on Mixed-Use ({:,})</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #9370DB;"></span>
-                <span class="text-xs text-gray-700">Industrial Conversion ({:,})</span>
+                <span class="text-sm text-gray-700">Industrial Conversion ({:,})</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF69B4;"></span>
-                <span class="text-xs text-gray-700">Industrial Needs Rezoning ({:,})</span>
+                <span class="text-sm text-gray-700">Industrial Needs Rezoning ({:,})</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FFD700;"></span>
-                <span class="text-xs text-gray-700">Teardown Candidates ({:,})</span>
+                <span class="text-sm text-gray-700">Teardown Candidates ({:,})</span>
             </div>
         </div>
         
         <!-- Zoning Categories -->
         <div class="border-t border-gray-200 pt-3 mb-3">
-            <h5 class="text-xs font-semibold text-gray-700 mb-2">Zoning Categories</h5>
+            <h5 class="text-sm font-semibold text-gray-700 mb-2">Zoning Categories</h5>
             <div class="space-y-1.5">
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #E60000;"></span>
-                    <span class="text-xs text-gray-600">Downtown</span>
+                    <span class="text-sm text-gray-600">Downtown</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF6A00;"></span>
-                    <span class="text-xs text-gray-600">Mixed Use</span>
+                    <span class="text-sm text-gray-600">Mixed Use</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FFD700;"></span>
-                    <span class="text-xs text-gray-600">Multi Unit</span>
+                    <span class="text-sm text-gray-600">Multi Unit</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FFF4C3;"></span>
-                    <span class="text-xs text-gray-600">Single Unit</span>
+                    <span class="text-sm text-gray-600">Single Unit</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #C9BDFF;"></span>
-                    <span class="text-xs text-gray-600">Industrial</span>
+                    <span class="text-sm text-gray-600">Industrial</span>
                 </div>
             </div>
         </div>
@@ -667,30 +675,30 @@ with open(output_file, 'r') as f:
     html_content = f.read()
 
 # Insert title CSS and HTML right after the <body> tag
-title_html = '''
+title_html = f'''
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
     /* Move Leaflet zoom controls to top right */
-    .leaflet-top.leaflet-left {
+    .leaflet-top.leaflet-left {{
         top: 10px;
         right: 60px;
         left: auto !important;
-    }
+    }}
     
     /* Fix Leaflet popup padding and style close button */
-    .leaflet-popup-content-wrapper {
+    .leaflet-popup-content-wrapper {{
         padding: 0 !important;
         border-radius: 0.75rem !important;
         overflow: hidden;
-    }
+    }}
     
-    .leaflet-popup-content {
+    .leaflet-popup-content {{
         margin: 0 !important;
         width: 100% !important;
-    }
+    }}
     
     /* Style and reposition Leaflet's default close button */
-    .leaflet-popup-close-button {
+    .leaflet-popup-close-button {{
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -710,17 +718,17 @@ title_html = '''
         background: none !important;
         border: none !important;
         line-height: 1 !important;
-    }
+    }}
     
-    .leaflet-popup-close-button:hover {
+    .leaflet-popup-close-button:hover {{
         color: rgba(255, 255, 255, 0.8) !important;
-    }
+    }}
 </style>
 <script>
     // Toggle between current and ballot measure scenarios
     var currentScenario = 'current';  // Start with CURRENT zoning visible
 
-    function toggleScenario(scenario) {
+    function toggleScenario(scenario) {{
         if (scenario === currentScenario) return; // Already on this scenario
         
         currentScenario = scenario;
@@ -730,82 +738,82 @@ title_html = '''
         var ballotBtn = document.getElementById('btn-ballot');
         var statsBox = document.getElementById('stats-box');
         
-        if (scenario === 'current') {
+        if (scenario === 'current') {{
             // Style current button as active
             currentBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-blue-600 shadow-md';
             ballotBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all text-white hover:bg-white/10';
             
             // Update stats
-            statsBox.innerHTML = '<div class="text-xs text-blue-100 space-y-0.5"><div><span class="text-white font-bold text-lg">2,131</span> <span class="text-blue-200">developable parcels</span></div><div><span class="text-white font-bold text-lg">~440K</span> <span class="text-blue-200">potential housing units</span></div></div>';
+            statsBox.innerHTML = '<div class="text-sm text-blue-100 space-y-0.5"><div><span class="text-white font-bold text-xl">{len(current_parcels):,}</span> <span class="text-blue-200">developable parcels</span></div><div><span class="text-white font-bold text-xl">~{int(current_units/1000)}K</span> <span class="text-blue-200">potential housing units</span></div></div>';
             
             // Hide ballot layers, show current layers
-            document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(function(label) {
+            document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(function(label) {{
                 var text = label.textContent.trim();
                 var checkbox = label.querySelector('input[type="checkbox"]');
-                if (text.includes('(Ballot)')) {
+                if (text.includes('(Ballot)')) {{
                     if (checkbox && checkbox.checked) checkbox.click();
-                } else if (text.includes('(Current)')) {
+                }} else if (text.includes('(Current)')) {{
                     if (checkbox && !checkbox.checked) checkbox.click();
-                } else if (text.includes('Tier 1:') || text.includes('Tier 2:') || text.includes('Tier 3:')) {
+                }} else if (text.includes('Tier 1:') || text.includes('Tier 2:') || text.includes('Tier 3:')) {{
                     // Hide ballot measure tier circles
                     if (checkbox && checkbox.checked) checkbox.click();
-                } else if (text.includes('3/8 Mile')) {
+                }} else if (text.includes('3/8 Mile')) {{
                     // Show standard 3/8 mile buffer
                     if (checkbox && !checkbox.checked) checkbox.click();
-                }
-            });
+                }}
+            }});
             
             // Update legend
-            document.getElementById('legend-units').innerHTML = '439,845';
-            document.getElementById('legend-parcels').innerHTML = '2,131';
+            document.getElementById('legend-units').innerHTML = '{int(current_units):,}';
+            document.getElementById('legend-parcels').innerHTML = '{len(current_parcels):,}';
             document.getElementById('legend-note').innerHTML = 'Legally developable today';
             
-        } else {
+        }} else {{
             // Style ballot button as active
             currentBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all text-white hover:bg-white/10';
             ballotBtn.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-blue-600 shadow-md';
             
             // Update stats
-            statsBox.innerHTML = '<div class="text-xs text-blue-100 space-y-0.5"><div><span class="text-white font-bold text-lg">2,521</span> <span class="text-blue-200">developable parcels</span></div><div><span class="text-white font-bold text-lg">~534K</span> <span class="text-blue-200">potential housing units</span></div><div class="text-green-300 font-semibold mt-1">+94K units (+21%)</div></div>';
+            statsBox.innerHTML = '<div class="text-sm text-blue-100 space-y-0.5"><div><span class="text-white font-bold text-xl">{len(ballot_parcels):,}</span> <span class="text-blue-200">developable parcels</span></div><div><span class="text-white font-bold text-xl">~{int(ballot_units/1000)}K</span> <span class="text-blue-200">potential housing units</span></div><div class="text-green-300 font-semibold mt-1">+{int(increase/1000)}K units (+{increase_pct:.0f}%)</div></div>';
             
             // Hide current layers, show ballot layers
-            document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(function(label) {
+            document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(function(label) {{
                 var text = label.textContent.trim();
                 var checkbox = label.querySelector('input[type="checkbox"]');
-                if (text.includes('(Current)')) {
+                if (text.includes('(Current)')) {{
                     if (checkbox && checkbox.checked) checkbox.click();
-                } else if (text.includes('(Ballot)')) {
+                }} else if (text.includes('(Ballot)')) {{
                     if (checkbox && !checkbox.checked) checkbox.click();
-                } else if (text.includes('Tier 1:') || text.includes('Tier 2:') || text.includes('Tier 3:')) {
+                }} else if (text.includes('Tier 1:') || text.includes('Tier 2:') || text.includes('Tier 3:')) {{
                     // Show ballot measure tier circles
                     if (checkbox && !checkbox.checked) checkbox.click();
-                } else if (text.includes('3/8 Mile')) {
+                }} else if (text.includes('3/8 Mile')) {{
                     // Hide standard 3/8 mile buffer
                     if (checkbox && checkbox.checked) checkbox.click();
-                }
-            });
+                }}
+            }});
             
             // Update legend
-            document.getElementById('legend-units').innerHTML = '534,032';
-            document.getElementById('legend-parcels').innerHTML = '2,521';
-            document.getElementById('legend-note').innerHTML = '<strong>+94,187 units (+21.4%)</strong> vs. current zoning';
-        }
-    }
+            document.getElementById('legend-units').innerHTML = '{int(ballot_units):,}';
+            document.getElementById('legend-parcels').innerHTML = '{len(ballot_parcels):,}';
+            document.getElementById('legend-note').innerHTML = '<strong>+{int(increase):,} units (+{increase_pct:.1f}%)</strong> vs. current zoning';
+        }}
+    }}
 
     // Remove rail lines and stations from layer control after page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
+    document.addEventListener('DOMContentLoaded', function() {{
+        setTimeout(function() {{
             // Find all layer control labels
             var labels = document.querySelectorAll('.leaflet-control-layers-overlays label');
-            labels.forEach(function(label) {
+            labels.forEach(function(label) {{
                 var text = label.textContent.trim();
                 // Hide RTD Rail Lines and RTD Stations from control
-                if (text === 'RTD Rail Lines' || text === 'RTD Stations') {
+                if (text === 'RTD Rail Lines' || text === 'RTD Stations') {{
                     label.style.display = 'none';
-                }
-            });
-        }, 100);
-    });
+                }}
+            }});
+        }}, 100);
+    }});
 </script>
 
 <!-- Unified Title & Toggle Component -->
@@ -813,8 +821,8 @@ title_html = '''
     <div class="p-4">
         <!-- Title -->
         <div class="mb-3">
-            <h1 class="text-3xl font-black mb-1">Mile High Potential</h1>
-            <p class="text-sm text-blue-100 leading-tight">Transit-oriented development opportunities in Denver</p>
+            <h1 class="text-4xl font-black mb-1">Mile High Potential</h1>
+            <p class="text-base text-blue-100 leading-tight">Transit-oriented development opportunities in Denver</p>
         </div>
         
         <!-- Segmented Control Toggle -->
@@ -822,12 +830,12 @@ title_html = '''
             <div class="grid grid-cols-2 gap-1">
                 <button id="btn-current" 
                         onclick="toggleScenario('current')"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-blue-600 shadow-md">
+                        class="px-4 py-2 rounded-lg text-base font-semibold transition-all bg-white text-blue-600 shadow-md">
                     Current Zoning
                 </button>
                 <button id="btn-ballot"
                         onclick="toggleScenario('ballot')"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-white hover:bg-white/10">
+                        class="px-4 py-2 rounded-lg text-base font-semibold transition-all text-white hover:bg-white/10">
                     After Ballot
                 </button>
             </div>
@@ -835,17 +843,17 @@ title_html = '''
         
         <!-- Stats Display -->
         <div id="stats-box" class="text-center px-2">
-            <div class="text-xs text-blue-100 space-y-0.5">
-                <div><span class="text-white font-bold text-lg">2,131</span> <span class="text-blue-200">developable parcels</span></div>
-                <div><span class="text-white font-bold text-lg">~440K</span> <span class="text-blue-200">potential housing units</span></div>
+            <div class="text-sm text-blue-100 space-y-0.5">
+                <div><span class="text-white font-bold text-xl">{len(current_parcels):,}</span> <span class="text-blue-200">developable parcels</span></div>
+                <div><span class="text-white font-bold text-xl">~{int(current_units/1000)}K</span> <span class="text-blue-200">potential housing units</span></div>
             </div>
         </div>
         
         <!-- About Link -->
         <div class="mt-3 pt-3 border-t border-blue-500/30">
-            <a href="about.html" class="text-sm text-blue-100 hover:text-white font-medium transition-colors flex items-center justify-center gap-1">
+            <a href="about.html" class="text-base text-blue-100 hover:text-white font-medium transition-colors flex items-center justify-center gap-1">
                 <span>About this project</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                 </svg>
             </a>

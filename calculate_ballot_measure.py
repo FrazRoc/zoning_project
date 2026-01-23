@@ -4,9 +4,9 @@ Calculate Development Potential AFTER Ballot Measure
 This script calculates what Denver's development potential would look like
 after the YIMBY Denver ballot measure passes, which rezones areas near transit:
 
-- 660ft from rail stations → C-MX-8x (8 stories, no FAR limit)
-- 1,320ft from rail stations → G-RX-5x (5 stories, FAR 3.0)
-- 1,980ft from rail stations → G-MU-3x (3 stories, FAR 1.5)
+- 660ft from rail stations → C-MX-8x (8 stories)
+- 1,320ft from rail stations → G-RX-5x (5 stories)
+- 1,980ft from rail stations → G-MU-3x (3 stories)
 
 (Plus similar distances for BRT and parks, but we'll focus on rail for now)
 """
@@ -17,6 +17,53 @@ import pandas as pd
 print("="*70)
 print("CALCULATING POST-BALLOT MEASURE DEVELOPMENT POTENTIAL")
 print("="*70)
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+# Stories to Units per Acre lookup (based on real-world development patterns)
+STORIES_TO_UPA = {
+    2: 30,
+    2.5: 35,
+    3: 60,
+    5: 100,
+    7: 160,
+    8: 160,
+    10: 160,
+    12: 220,
+    16: 280,
+    20: 350,
+    30: 450
+}
+
+def calculate_units_from_stories(land_area_acres, stories):
+    """
+    Calculate potential units using stories-to-units-per-acre lookup.
+    
+    Args:
+        land_area_acres: Land area in acres
+        stories: Number of stories (height limit from zoning)
+        
+    Returns:
+        Estimated potential units (rounded to nearest integer)
+    """
+    # Find closest story height in lookup table
+    if stories in STORIES_TO_UPA:
+        units_per_acre = STORIES_TO_UPA[stories]
+    else:
+        # Interpolate or use nearest value
+        story_heights = sorted(STORIES_TO_UPA.keys())
+        if stories < min(story_heights):
+            units_per_acre = STORIES_TO_UPA[min(story_heights)]
+        elif stories > max(story_heights):
+            units_per_acre = STORIES_TO_UPA[max(story_heights)]
+        else:
+            # Find nearest story height
+            nearest = min(story_heights, key=lambda x: abs(x - stories))
+            units_per_acre = STORIES_TO_UPA[nearest]
+    
+    return round(land_area_acres * units_per_acre)
 
 # ============================================================================
 # LOAD DATA
@@ -61,7 +108,7 @@ print(f"   ✓ Calculated distances for {len(parcels_with_distance):,} parcels")
 
 print("\n3. Assigning post-ballot measure zoning...")
 
-def get_ballot_measure_zoning(distance_ft, current_zone, current_far):
+def get_ballot_measure_zoning(distance_ft, current_zone, current_stories):
     """
     Determine zoning after ballot measure based on distance to transit
     
@@ -69,48 +116,43 @@ def get_ballot_measure_zoning(distance_ft, current_zone, current_far):
     - Only upzones, never downzones
     - Keeps existing zoning if it's already better
     
-    Returns tuple: (new_zone, new_far, new_stories)
+    Returns tuple: (new_zone, new_stories)
     """
     # Determine what ballot measure would assign
     if distance_ft <= 660:  # Within 660ft of station
         ballot_zone = 'C-MX-8x'
-        ballot_far = 8.0
         ballot_stories = 8
     elif distance_ft <= 1320:  # Within 1/4 mile of station
         ballot_zone = 'G-RX-5x'
-        ballot_far = 3.0
         ballot_stories = 5
     elif distance_ft <= 1980:  # Within 3/8 mile of station
         ballot_zone = 'G-MU-3x'
-        ballot_far = 1.5
         ballot_stories = 3
     else:
         # Outside ballot measure zones - keep current zoning
-        return (current_zone, current_far, None)
+        return (current_zone, current_stories)
     
     # Compare with current zoning - only upzone if ballot measure is MORE permissive
-    # Use FAR as proxy for "more permissive" (higher FAR = more permissive)
-    if current_far is not None and current_far >= ballot_far:
+    # Use story height as proxy for "more permissive" (more stories = more permissive)
+    if current_stories is not None and current_stories >= ballot_stories:
         # Current zoning is already equal or better - keep it
-        return (current_zone, current_far, None)
+        return (current_zone, current_stories)
     
     # Ballot measure provides more permissive zoning - apply it
-    return (ballot_zone, ballot_far, ballot_stories)
+    return (ballot_zone, ballot_stories)
 
 # Apply ballot measure zoning
 parcels_with_distance['ballot_zone'] = None
-parcels_with_distance['ballot_far'] = None
 parcels_with_distance['ballot_stories'] = None
 
 for idx, row in parcels_with_distance.iterrows():
-    new_zone, new_far, new_stories = get_ballot_measure_zoning(
+    new_zone, new_stories = get_ballot_measure_zoning(
         row['distance_to_station_ft'], 
         row.get('ZONE_DISTRICT', ''),
-        row.get('max_far', None)  # Pass current FAR for comparison
+        row.get('max_stories', None)  # Pass current stories for comparison
     )
     parcels_with_distance.at[idx, 'ballot_zone'] = new_zone
-    parcels_with_distance.at[idx, 'ballot_far'] = new_far if new_far is not None else row.get('max_far', None)
-    parcels_with_distance.at[idx, 'ballot_stories'] = new_stories
+    parcels_with_distance.at[idx, 'ballot_stories'] = new_stories if new_stories is not None else row.get('max_stories', 3)
 
 # Count parcels by new zone
 print("\n   Parcels by ballot measure zone:")
@@ -124,24 +166,19 @@ for zone, count in zone_counts.items():
 
 print("\n4. Calculating new development potential...")
 
-# Use the same conservative assumption: 1,500 gross sq ft per unit
-# This accounts for common areas, lobbies, elevators, parking, etc.
-
 def calculate_ballot_potential(row):
-    """Calculate potential units under ballot measure zoning"""
-    land_area_sf = row.get('land_area_sf', 0)
+    """Calculate potential units under ballot measure zoning using stories-to-units-per-acre"""
+    land_area_acres = row.get('land_area_acres', 0)
     
-    # Use the HIGHER of current FAR or ballot measure FAR (never downzone)
-    current_far = row.get('max_far', 0)
-    ballot_far = row.get('ballot_far', current_far)
+    # Use the HIGHER of current stories or ballot measure stories (never downzone)
+    current_stories = row.get('max_stories', 3)
+    ballot_stories = row.get('ballot_stories', current_stories)
     
     # Use whichever is higher
-    effective_far = max(current_far, ballot_far) if ballot_far is not None else current_far
+    effective_stories = max(current_stories, ballot_stories) if ballot_stories is not None else current_stories
     
-    # Calculate: land_area_sf × FAR ÷ 1,500 sf/unit
-    potential_units = (land_area_sf * effective_far) / 1500
-    
-    return round(potential_units)
+    # Calculate using stories-to-units-per-acre lookup
+    return calculate_units_from_stories(land_area_acres, effective_stories)
 
 parcels_with_distance['ballot_potential_units'] = parcels_with_distance.apply(
     calculate_ballot_potential, axis=1

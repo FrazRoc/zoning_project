@@ -12,80 +12,77 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             line-height: 1.6;
             color: #333;
-            background-color: #f5f5f5;
+            background: #f5f7fa;
         }
         
         header {
-            background-color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 2rem 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px;
+            padding: 3rem 2rem;
+            text-align: center;
         }
         
         header h1 {
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
+            font-weight: 800;
         }
         
         header p {
             font-size: 1.1rem;
-            opacity: 0.9;
+            opacity: 0.95;
         }
         
         nav {
-            background-color: #34495e;
-            padding: 1rem 0;
-            margin-bottom: 2rem;
-        }
-        
-        nav .container {
-            display: flex;
-            gap: 2rem;
+            background: #5a67d8;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         nav a {
             color: white;
             text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.2s;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
         }
         
         nav a:hover {
-            opacity: 0.8;
+            background: rgba(255,255,255,0.1);
         }
         
-        main {
-            background-color: white;
-            padding: 3rem 0;
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 2rem;
         }
         
-        .content {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px;
+        .content-section {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         h2 {
-            color: #2c3e50;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
+            color: #2d3748;
             font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
         }
         
         h3 {
-            color: #34495e;
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
+            color: #4a5568;
             font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
         }
         
         p {
@@ -93,19 +90,12 @@
         }
         
         ul {
-            margin-bottom: 1rem;
             margin-left: 2rem;
+            margin-bottom: 1rem;
         }
         
         li {
             margin-bottom: 0.5rem;
-        }
-        
-        .highlight-box {
-            background-color: #ecf0f1;
-            border-left: 4px solid #3498db;
-            padding: 1.5rem;
-            margin: 2rem 0;
         }
         
         .stats {
@@ -116,54 +106,75 @@
         }
         
         .stat-box {
-            background-color: #3498db;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 1.5rem;
             border-radius: 8px;
             text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
         .stat-box .number {
-            font-size: 2.5rem;
-            font-weight: bold;
             display: block;
+            font-size: 2rem;
+            font-weight: bold;
             margin-bottom: 0.5rem;
         }
         
         .stat-box .label {
+            display: block;
             font-size: 0.9rem;
             opacity: 0.9;
         }
         
-        .category-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin: 1.5rem 0;
-        }
-        
-        .category-item {
-            background-color: #f8f9fa;
+        .highlight-box {
+            background: #edf2f7;
+            border-left: 4px solid #667eea;
             padding: 1rem;
-            border-radius: 5px;
-            border-left: 4px solid #3498db;
+            margin: 1rem 0;
+            border-radius: 4px;
         }
         
-        .category-item h4 {
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .cta-section h2 {
+            color: white;
+            border-bottom: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 0.75rem 2rem;
+            margin: 0.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
         footer {
-            background-color: #2c3e50;
+            background: #2d3748;
             color: white;
+            padding: 2rem;
             text-align: center;
-            padding: 2rem 0;
             margin-top: 3rem;
         }
         
         footer a {
-            color: #3498db;
+            color: #90cdf4;
             text-decoration: none;
         }
         
@@ -174,168 +185,121 @@
 </head>
 <body>
     <header>
-        <div class="container">
-            <h1>Mile High Potential</h1>
-            <p>Finding development opportunities in Denver among its transit network</p>
-        </div>
+        <h1>Mile High Potential</h1>
+        <p>Understanding transit-oriented development opportunities in Denver</p>
     </header>
     
     <nav>
-        <div class="container">
-            <a href="index.html">Map</a>
-            <a href="about.html">About</a>
-            <a href="https://github.com/FrazRoc/zoning_project" target="_blank">GitHub</a>
-        </div>
+        <a href="denver_tod_with_parcels_v2.html">← Back to Interactive Map</a>
     </nav>
     
-    <main>
-        <div class="content">
-            <h2>About This Project</h2>
+    <div class="container">
+        <!-- Overview Section -->
+        <section class="content-section">
+            <h2>What is This?</h2>
             <p>
-                Mile High Potential is an interactive mapping tool that visualizes the transformative impact of a proposed 
-                YIMBY Denver ballot initiative. The map allows you to toggle between two scenarios:
+                Mile High Potential is an interactive mapping tool that visualizes development opportunities near Denver's 
+                RTD light rail stations. It compares current zoning with a proposed ballot measure that would allow more 
+                housing near transit.
             </p>
             
             <div class="highlight-box">
-                <strong>Current Zoning:</strong> Shows 2,131 parcels that are legally developable today with potential for 
-                ~440,000 housing units near RTD light rail stations.<br><br>
-                <strong>After Ballot Measure:</strong> Shows 2,521 parcels (including newly upzoned industrial land) with 
-                potential for ~534,000 housing units — an increase of <strong>+94,187 units (+21.4%)</strong>.
+                <strong>Current Zoning:</strong> Shows 1,665 parcels that are legally developable today with potential for 
+                approximately 202,583 housing units near RTD light rail stations (within 3/8 mile).<br><br>
+                <strong>After Ballot Measure:</strong> Shows 1,867 parcels (including 202 newly upzoned industrial parcels) with 
+                potential for approximately 266,450 housing units — an increase of <strong>+63,867 units (+31.5%)</strong>.
             </div>
             
             <p>
                 By comparing these scenarios side-by-side, you can see exactly how the ballot measure would unlock 
-                housing potential across Denver's transit network.
+                housing potential across Denver's transit network. Toggle between views to explore the differences 
+                and click individual parcels to see detailed information.
             </p>
             
             <div class="stats">
                 <div class="stat-box">
-                    <span class="number">2,131</span>
+                    <span class="number">1,665</span>
                     <span class="label">Current Opportunity Parcels</span>
                 </div>
                 <div class="stat-box">
-                    <span class="number">2,521</span>
+                    <span class="number">1,867</span>
                     <span class="label">After Ballot Measure</span>
                 </div>
                 <div class="stat-box">
-                    <span class="number">+21.4%</span>
+                    <span class="number">+31.5%</span>
                     <span class="label">Housing Capacity Increase</span>
                 </div>
             </div>
+        </section>
+        
+        <!-- How It Works Section -->
+        <section class="content-section">
+            <h2>How It Works</h2>
             
-            <h2>Why Transit-Oriented Development?</h2>
+            <h3>The Interactive Map</h3>
             <p>
-                Transit-oriented development creates walkable, mixed-use communities around public transportation. Benefits include:
+                The map shows parcels color-coded by opportunity type. Use the toggle at the top to switch between 
+                "Current Zoning" and "After Ballot Measure" scenarios.
             </p>
+            
+            <h3>Opportunity Categories</h3>
             <ul>
-                <li><strong>Reduced car dependency:</strong> Residents can walk, bike, or take transit to work and amenities</li>
-                <li><strong>Lower housing costs:</strong> Reduced transportation expenses and increased housing supply</li>
-                <li><strong>Environmental benefits:</strong> Lower carbon emissions and reduced urban sprawl</li>
-                <li><strong>Economic vitality:</strong> Increased foot traffic supports local businesses</li>
-                <li><strong>Housing equity:</strong> Access to opportunity for residents without cars</li>
+                <li><strong>Large Vacant Land:</strong> Vacant parcels over 0.5 acres ready for development</li>
+                <li><strong>SF on Multi-Unit Zoning:</strong> Single-family homes on land zoned for apartments</li>
+                <li><strong>Commercial on Mixed-Use Zoning:</strong> Commercial buildings in mixed-use zones that could add housing</li>
+                <li><strong>Industrial Conversion:</strong> Industrial properties already zoned for residential conversion</li>
+                <li><strong>Industrial Needs Rezoning:</strong> Industrial land that would be upzoned by the ballot measure</li>
+                <li><strong>Teardown Candidates:</strong> Aging structures where land value exceeds building value</li>
             </ul>
             
-            <h2>Opportunity Categories</h2>
-            <p>The map identifies six types of redevelopment opportunities:</p>
+            <h3>The Ballot Measure</h3>
+            <p>The proposed ballot measure would create three zoning tiers based on distance from RTD light rail stations:</p>
+            <ul>
+                <li><strong>Tier 1 (≤660 feet):</strong> C-MX-8x zoning → 8 stories allowed</li>
+                <li><strong>Tier 2 (≤1,320 feet):</strong> G-RX-5x zoning → 5 stories allowed</li>
+                <li><strong>Tier 3 (≤1,980 feet):</strong> G-MU-3x zoning → 3 stories allowed</li>
+            </ul>
             
-            <div class="category-list">
-                <div class="category-item">
-                    <h4>Large Vacant Land</h4>
-                    <p>218 parcels of vacant land over 0.5 acres, ideal for large-scale development projects.</p>
-                </div>
-                
-                <div class="category-item">
-                    <h4>Single-Family on Multi-Unit Zoning</h4>
-                    <p>673 parcels currently used for single-family homes but zoned for multi-unit housing.</p>
-                </div>
-                
-                <div class="category-item">
-                    <h4>Commercial on Mixed-Use Zoning</h4>
-                    <p>360 parcels with commercial buildings on mixed-use zoning allowing residential development.</p>
-                </div>
-                
-                <div class="category-item">
-                    <h4>Industrial Conversion</h4>
-                    <p>301 industrial properties on mixed-use zoning, ready for residential conversion.</p>
-                </div>
-                
-                <div class="category-item">
-                    <h4>Industrial Needs Rezoning</h4>
-                    <p>390 industrial parcels near transit that would require rezoning for residential use.</p>
-                </div>
-                
-                <div class="category-item">
-                    <h4>Teardown Candidates</h4>
-                    <p>579 underutilized properties with low improvement-to-land value ratios.</p>
-                </div>
+            <div class="highlight-box">
+                <strong>Important:</strong> The ballot measure only upzones — it never downzones. If existing zoning 
+                already allows more height, that zoning is preserved.
             </div>
-            
-            <h2>Ballot Measure Zoning Tiers</h2>
-            <p>The proposed ballot initiative would create three tiers of upzoning based on distance from RTD light rail stations:</p>
-            
-            <div class="category-list">
-                <div class="category-item" style="border-left-color: #C92A2A;">
-                    <h4>Tier 1: C-MX-8x (≤660 feet)</h4>
-                    <p><strong>8 stories</strong> within 660 feet of rail stations. The highest density tier for areas immediately adjacent to transit.</p>
-                </div>
-                
-                <div class="category-item" style="border-left-color: #E67700;">
-                    <h4>Tier 2: G-RX-5x (≤1,320 feet)</h4>
-                    <p><strong>5 stories</strong> within a quarter mile of rail stations. Medium density for the walkable core around transit.</p>
-                </div>
-                
-                <div class="category-item" style="border-left-color: #F59F00;">
-                    <h4>Tier 3: G-MU-3x (≤1,980 feet)</h4>
-                    <p><strong>3 stories</strong> within roughly 3/8 mile of rail stations. Gentle density increase for the outer transit-accessible area.</p>
-                </div>
-            </div>
-            
-            <p>
-                <strong>Important:</strong> The ballot measure only <em>upzones</em> — existing zoning that is more permissive is preserved. 
-                This protects areas that already allow taller buildings while bringing lower-density areas up to transit-appropriate heights.
-            </p>
-            
+        </section>
+        
+        <!-- Methodology Section -->
+        <section class="content-section">
             <h2>Methodology</h2>
             
-            <h3>Data Sources</h3>
-            <ul>
-                <li><strong>Parcel Data:</strong> Denver Open Data (property boundaries, zoning, assessed values)</li>
-                <li><strong>Zoning Districts:</strong> Denver Open Data (current zoning designations)</li>
-                <li><strong>Transit Data:</strong> RTD GIS (light rail lines and station locations)</li>
-            </ul>
-            
-            <h3>Selection Criteria</h3>
-            <p>Parcels were selected based on:</p>
-            <ul>
-                <li><strong>Proximity to transit:</strong> Within 1/2 mile of RTD light rail stations</li>
-                <li><strong>Zoning alignment:</strong> Currently zoned for residential or mixed-use development</li>
-                <li><strong>Development potential:</strong> Underutilized land or buildings with redevelopment opportunity</li>
-                <li><strong>Exclusions:</strong> Public land, parks, right-of-ways, existing apartment buildings, and narrow parcels (railroad corridors)</li>
-            </ul>
-            
-            <h3>Unit Calculations & Scenario Comparison</h3>
+            <h3>Unit Calculations</h3>
             <p>
-                Potential housing units are estimated conservatively using each parcel's maximum allowed Floor Area Ratio (FAR) 
-                or story height from Denver's zoning code. We assume 1,500 gross square feet per unit, which accounts for:
+                Potential housing units are calculated using empirical "units per acre" ratios based on real-world 
+                development patterns. These ratios account for building efficiency, parking, setbacks, and common areas.
             </p>
+            
+            <p><strong>Units per Acre by Building Height:</strong></p>
             <ul>
-                <li>Average unit size of ~900 sq ft (mix of studios, 1BR, 2BR)</li>
-                <li>Building efficiency of ~60% (common areas, lobbies, elevators, parking, mechanical)</li>
+                <li>2-3 stories: 30-60 units/acre (townhomes, walk-ups)</li>
+                <li>5 stories: 100 units/acre (mid-rise, no elevator required)</li>
+                <li>7-10 stories: 160 units/acre (mid-rise with elevators)</li>
+                <li>12+ stories: 220-450 units/acre (high-rise)</li>
             </ul>
+            
+            <h3>Two Scenarios</h3>
             
             <p><strong>Current Zoning Scenario:</strong></p>
             <ul>
                 <li>Includes only parcels that are <em>legally developable today</em> for residential use</li>
-                <li>Excludes 390 "Industrial Needs Rezoning" parcels on I-A/I-B zoning (industrial use only)</li>
-                <li>Total: 2,131 parcels with ~440,000 potential units</li>
+                <li>Excludes 202 industrial-zoned parcels that would require rezoning (I-A/I-B zones)</li>
+                <li>Based on existing Denver zoning code height limits and development rights</li>
+                <li>Total: 1,665 parcels with approximately 202,583 potential units</li>
             </ul>
             
             <p><strong>After Ballot Measure Scenario:</strong></p>
             <ul>
-                <li>Applies ballot measure upzoning tiers based on distance to rail stations</li>
+                <li>Applies ballot measure upzoning tiers based on distance to rail stations (3 tiers within 3/8 mile)</li>
                 <li>Includes formerly industrial parcels that would be upzoned to residential/mixed-use</li>
                 <li>Preserves existing zoning if it's already more permissive (never downzones)</li>
-                <li>Total: 2,521 parcels with ~534,000 potential units (+21.4%)</li>
+                <li>Total: 1,867 parcels with approximately 266,450 potential units (+31.5%)</li>
             </ul>
             
             <div class="highlight-box">
@@ -343,54 +307,43 @@
                 by economic feasibility, site conditions, parking requirements, historic preservation, and community input.
             </div>
             
-            <h2>Limitations</h2>
-            <p>This analysis has several important limitations:</p>
+            <h3>Data Sources</h3>
             <ul>
-                <li><strong>Market feasibility:</strong> Not all opportunities are economically viable to develop</li>
-                <li><strong>Site constraints:</strong> Flood zones, contamination, slopes, and other physical limitations are not considered</li>
-                <li><strong>Owner intent:</strong> Property owners may not wish to sell or redevelop</li>
-                <li><strong>Community impact:</strong> Development must balance growth with neighborhood character and displacement concerns</li>
-                <li><strong>Infrastructure capacity:</strong> Water, sewer, and other utilities may require upgrades</li>
+                <li><strong>Parcel Data:</strong> Denver Open Data Catalog</li>
+                <li><strong>Zoning Data:</strong> Denver Open Data Catalog</li>
+                <li><strong>Transit Data:</strong> RTD GIS Services</li>
             </ul>
-            
-            <h2>How to Use This Map</h2>
+        </section>
+        
+        <!-- Limitations Section -->
+        <section class="content-section">
+            <h2>Limitations & Considerations</h2>
             <ul>
-                <li><strong>Toggle layers:</strong> Use the layer control (top right) to show/hide different categories</li>
-                <li><strong>Click parcels:</strong> View detailed information including zoning, size, and development potential</li>
-                <li><strong>View transit context:</strong> See how parcels relate to rail lines and station buffers</li>
-                <li><strong>Explore neighborhoods:</strong> Zoom and pan to examine different parts of Denver</li>
+                <li><strong>Market Feasibility:</strong> Not all opportunities are economically viable to develop</li>
+                <li><strong>Site Constraints:</strong> Flood zones, contamination, slopes, and other physical limitations not considered</li>
+                <li><strong>Owner Intent:</strong> Property owners may not wish to sell or redevelop</li>
+                <li><strong>Community Impact:</strong> Development must balance growth with neighborhood character and displacement concerns</li>
+                <li><strong>Infrastructure:</strong> Water, sewer, and utilities may require upgrades</li>
+                <li><strong>Theoretical Maximum:</strong> Calculations assume full buildout to zoning limits, which rarely occurs in practice</li>
             </ul>
-            
-            <h2>Get Involved</h2>
-            <p>
-                This project is open source and contributions are welcome! Visit our 
-                <a href="https://github.com/FrazRoc/zoning_project" target="_blank">GitHub repository</a> to:
-            </p>
-            <ul>
-                <li>View the source code and methodology</li>
-                <li>Report issues or suggest improvements</li>
-                <li>Contribute to data analysis or visualization</li>
-            </ul>
-            
-            <h2>Contact</h2>
-            <p>
-                Questions, feedback, or suggestions? Please open an issue on 
-                <a href="https://github.com/FrazRoc/zoning_project/issues" target="_blank">GitHub</a> or reach out through the repository.
-            </p>
-            
-            <div class="highlight-box">
-                <strong>Disclaimer:</strong> This tool is for informational and educational purposes only. It does not constitute 
-                legal, financial, or development advice. Property owners and developers should conduct thorough due diligence 
-                and consult with professionals before making development decisions.
-            </div>
-        </div>
-    </main>
+        </section>
+        
+        <!-- Call to Action -->
+        <section class="cta-section">
+            <h2>Explore the Data</h2>
+            <p>Ready to dive in? The interactive map lets you click on individual parcels to see detailed information about each opportunity.</p>
+            <a href="denver_tod_with_parcels_v2.html" class="btn">View Interactive Map</a>
+        </section>
+    </div>
     
     <footer>
-        <div class="container">
-            <p>&copy; 2026 Mile High Potential | <a href="https://github.com/FrazRoc/zoning_project">Open Source</a></p>
-            <p style="margin-top: 0.5rem; opacity: 0.8;">Data sources: Denver Open Data, RTD GIS</p>
-        </div>
+        <p>
+            Created for <strong>YIMBY Denver</strong> | 
+            <a href="https://github.com/FrazRoc/zoning_project" target="_blank">View on GitHub</a>
+        </p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">
+            Last updated: G-RX-5x
+        </p>
     </footer>
 </body>
 </html>
