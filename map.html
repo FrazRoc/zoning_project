@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mile High Potential - Interactive Policy Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/config-panel.css">
+    
+    <style>
+        /* Zone tooltip styling */
+        .zone-tooltip {
+            background: white;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .zone-tooltip::before {
+            border-top-color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Map Container -->
+    <div id="map"></div>
+    
+    <!-- Title Card (Top Left) -->
+    <div class="fixed top-3 left-3 z-[1000] bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl shadow-2xl max-w-md">
+        <div class="p-4">
+            <div class="mb-3">
+                <h1 class="text-4xl font-black mb-1">Mile High Potential</h1>
+                <p class="text-base text-blue-100 leading-tight">Transit-oriented development opportunities in Denver</p>
+            </div>
+            
+            <div id="stats-box" class="text-center px-2">
+                <div class="text-sm text-blue-100 space-y-0.5">
+                    <div><span class="text-white font-bold text-xl" id="stat-parcels">--</span> <span class="text-blue-200">upzoned parcels</span></div>
+                    <div><span class="text-white font-bold text-xl" id="stat-units">--</span> <span class="text-blue-200">potential housing units</span></div>
+                </div>
+            </div>
+            
+            <div class="mt-3 pt-3 border-t border-blue-500/30">
+                <a href="about.html" class="text-base text-blue-100 hover:text-white font-medium transition-colors flex items-center justify-center gap-1">
+                    <span>About this project</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Config Button (Below Title Card, Left Side) -->
+    <button id="open-config-btn" class="fixed top-[250px] left-3 z-[1000] bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl shadow-2xl px-6 py-3 font-semibold text-base hover:shadow-3xl transition-all">
+        ⚙️ Configure Policy
+    </button>
+    
+    <!-- Legend (Bottom Right) -->
+    <div id="legend" class="fixed bottom-3 right-3 w-72 bg-white rounded-lg shadow-lg z-[999]">
+        <div id="legend-content" class="p-4">
+            <h4 class="text-base font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+                <span>Transit-Oriented Development</span>
+            </h4>
+            
+            <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF0000;"></span>
+                    <span class="text-sm text-gray-700">Ring 1 (≤500ft) - <span id="legend-ring1-count">--</span></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF8C00;"></span>
+                    <span class="text-sm text-gray-700">Ring 2 (≤1000ft) - <span id="legend-ring2-count">--</span></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FFD700;"></span>
+                    <span class="text-sm text-gray-700">Ring 3 (≤1500ft) - <span id="legend-ring3-count">--</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Configuration Panel (slides from left) -->
+    <div id="config-backdrop" class="config-backdrop"></div>
+    
+    <div id="config-panel" class="config-panel">
+        <!-- Panel Header -->
+        <div class="panel-header">
+            <h2>Configure Policy</h2>
+            <button id="close-config-btn" class="panel-close" aria-label="Close">&times;</button>
+        </div>
+        
+        <!-- Panel Content -->
+        <div class="panel-content">
+            <!-- Presets -->
+            <div class="panel-section">
+                <div class="section-title">Presets</div>
+                <div class="preset-buttons">
+                    <button class="preset-btn active" data-preset="ballot">Ballot Measure</button>
+                    <button class="preset-btn" data-preset="custom">Custom</button>
+                </div>
+            </div>
+            
+            <!-- Ring 1 Configuration -->
+            <div class="ring-config">
+                <div class="ring-title">Ring 1 (Innermost)</div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Distance</span>
+                        <span class="slider-value"><span id="ring1-distance-value">500</span> ft</span>
+                    </div>
+                    <input type="range" class="slider" id="ring1-distance" 
+                           min="330" max="2640" step="10" value="500">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Height</span>
+                        <span class="slider-value"><span id="ring1-height-value">8</span> stories</span>
+                    </div>
+                    <input type="range" class="slider" id="ring1-height" 
+                           min="2" max="20" step="1" value="8">
+                </div>
+            </div>
+            
+            <!-- Ring 2 Configuration -->
+            <div class="ring-config">
+                <div class="ring-title">Ring 2 (Middle)</div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Distance</span>
+                        <span class="slider-value"><span id="ring2-distance-value">1000</span> ft</span>
+                    </div>
+                    <input type="range" class="slider" id="ring2-distance" 
+                           min="330" max="2640" step="10" value="1000">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Height</span>
+                        <span class="slider-value"><span id="ring2-height-value">5</span> stories</span>
+                    </div>
+                    <input type="range" class="slider" id="ring2-height" 
+                           min="2" max="20" step="1" value="5">
+                </div>
+            </div>
+            
+            <!-- Ring 3 Configuration -->
+            <div class="ring-config">
+                <div class="ring-title">Ring 3 (Outer)</div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Distance</span>
+                        <span class="slider-value"><span id="ring3-distance-value">1500</span> ft</span>
+                    </div>
+                    <input type="range" class="slider" id="ring3-distance" 
+                           min="330" max="2640" step="10" value="1500">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Height</span>
+                        <span class="slider-value"><span id="ring3-height-value">3</span> stories</span>
+                    </div>
+                    <input type="range" class="slider" id="ring3-height" 
+                           min="2" max="20" step="1" value="3">
+                </div>
+            </div>
+            
+            <!-- Results -->
+            <div class="results-box">
+                <div class="results-title">
+                    <span>📊</span>
+                    <span>Policy Impact</span>
+                </div>
+                
+                <div class="result-stat">
+                    <span class="result-label">Total Parcels:</span>
+                    <span class="result-value" id="result-parcels">--</span>
+                </div>
+                
+                <div class="result-stat">
+                    <span class="result-label">Potential Units:</span>
+                    <span class="result-value" id="result-units">--</span>
+                </div>
+                
+                <div class="result-stat">
+                    <span class="result-label">Ring 1:</span>
+                    <span class="result-value" id="result-ring1">--</span>
+                </div>
+                
+                <div class="result-stat">
+                    <span class="result-label">Ring 2:</span>
+                    <span class="result-value" id="result-ring2">--</span>
+                </div>
+                
+                <div class="result-stat">
+                    <span class="result-label">Ring 3:</span>
+                    <span class="result-value" id="result-ring3">--</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel Actions -->
+        <div class="panel-actions">
+            <button id="apply-btn" class="btn btn-primary">Apply Changes</button>
+            <button id="reset-btn" class="btn btn-secondary">Reset</button>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Our JavaScript Modules -->
+    <script src="js/api-client.js"></script>
+    <script src="js/transit-renderer.js"></script>
+    <script src="js/tod-controller.js"></script>
+    <script src="js/map-updater.js"></script>
+    <script src="js/config-panel.js"></script>
+    
+    <!-- Main App Initialization -->
+    <script>
+        // Initialize map - make it globally accessible
+        map = L.map('map', {
+            center: [39.7392, -104.9903],
+            zoom: 12,
+            zoomControl: true
+        });
+        
+        // Add base map
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+        
+        // Add Denver zoning layer (official city zoning districts)
+        fetch('ODC_ZONE_ZONING_A_-6072697703037489513.geojson')
+            .then(response => response.json())
+            .then(data => {
+                // Zoning color mapping (Denver official colors)
+                const zoningColors = {
+                    // Downtown
+                    'downtown': '#E60000',
+                    // Mixed Use
+                    'mixed_use': '#FF6A00',
+                    // Multi Unit
+                    'multi_unit': '#FFD700',
+                    // Single Unit
+                    'single_unit': '#FFF4C3',
+                    // Two Unit
+                    'two_unit': '#FFEB99',
+                    // Row House
+                    'row_house': '#FFE066',
+                    // Industrial
+                    'industrial': '#C9BDFF',
+                    // Campus
+                    'campus': '#2596be',
+                    // Special
+                    'special': '#E5E5E5',
+                    // Open Space
+                    'open_space': '#90EE90'
+                };
+                
+                //Updated this function from Google Gemini
+                const getZoneCategory = (zone) => {
+                    if (!zone) return 'special';
+                    const z = zone.toUpperCase();
+                    // 1. DOWNTOWN
+                    if (z.startsWith('D-') || z.startsWith('B-5') || z.startsWith('B-7')) return 'downtown';
+                    // 2. MIXED USE (Commercial corridors and Mixed contexts)
+                    // Matches: *-MX, *-MS, *-CC, and Legacy B- districts
+                    if (z.includes('-MX') || z.includes('-MS') || z.includes('-CC') || 
+                        z.startsWith('B-') || z.startsWith('C-MU') || z.startsWith('T-MU')) return 'mixed_use';
+                    // 3. MULTI UNIT & ROW HOUSE
+                    // Matches: *-MU, *-RO, *-RX, and Legacy R-3/R-4
+                    if (z.includes('-MU') || z.includes('-RO') || z.includes('-RX') || 
+                        z.startsWith('R-3') || z.startsWith('R-4') || z.startsWith('R-5')) return 'multi_unit';
+                    if (z.includes('-RH') || z.includes('-TH')) return 'row_house';
+                    // 4. TWO UNIT
+                    // Matches: *-TU and Legacy R-2
+                    if (z.includes('-TU') || z.startsWith('R-2')) return 'two_unit';
+                    // 5. SINGLE UNIT
+                    // Matches: *-SU and Legacy R-0 / R-1
+                    if (z.includes('-SU') || z.startsWith('R-0') || z.startsWith('R-1') || z.startsWith('RS-')) return 'single_unit';
+                    // 6. INDUSTRIAL
+                    if (z.startsWith('I-')) return 'industrial';
+                    // 7. OPEN SPACE
+                    if (z.startsWith('OS-') || z.startsWith('O-')) return 'open_space';
+                    // 8. CAMPUS & HOSPITAL (excluded from development)
+                    if (z.startsWith('CMP') || z.startsWith('H-')) return 'campus';
+                    return 'special'; // Catches PUD and rare edge cases
+                };
+                
+                L.geoJSON(data, {
+                    style: (feature) => {
+                        const zone = feature.properties.ZONE_DISTRICT || feature.properties.zone_district;
+                        const category = getZoneCategory(zone);
+                        const color = zoningColors[category] || '#E5E5E5';
+                        
+                        return {
+                            fillColor: color,
+                            weight: 0.5,
+                            opacity: 1,
+                            color: '#000000',  // Black border
+                            fillOpacity: 0.2
+                        };
+                    },
+                    onEachFeature: (feature, layer) => {
+                        const zone = feature.properties.ZONE_DISTRICT || feature.properties.zone_district;
+                        
+                        // Add tooltip on hover
+                        layer.bindTooltip(`Zone: ${zone}`, {
+                            permanent: false,
+                            direction: 'auto',
+                            className: 'zone-tooltip'
+                        });
+                    }
+                }).addTo(map);
+                
+                console.log('✓ Denver zoning layer loaded');
+            })
+            .catch(error => console.log('Zoning layer not found (optional):', error));
+        
+        // Initialize transit renderer and load stations/rail lines
+        const transitRenderer = new TransitRenderer(map);
+        transitRenderer.loadAll().then(result => {
+            console.log(`Transit loaded: ${result.linesCount} line segments, ${result.stationsCount} stations`);
+        });
+        
+        // Initialize application
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Mile High Potential - Interactive Map Loaded');
+            // App initialization will be handled by config-panel.js
+        });
+    </script>
+</body>
+</html>
