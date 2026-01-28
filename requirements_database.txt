@@ -1,0 +1,18 @@
+# Database setup requirements
+# Install with: pip install -r requirements_database.txt
+
+# PostgreSQL adapter
+psycopg2-binary==2.9.9
+
+# SQLAlchemy for database ORM
+SQLAlchemy==2.0.23
+
+# Geospatial extensions for SQLAlchemy
+GeoAlchemy2==0.14.2
+
+# Geospatial data handling
+geopandas==0.14.1
+shapely==2.0.2
+
+# Data manipulation
+pandas==2.1.4

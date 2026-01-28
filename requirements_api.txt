@@ -1,0 +1,15 @@
+# FastAPI Backend Requirements
+# Install with: pip install -r requirements_api.txt
+
+# FastAPI framework
+fastapi==0.104.1
+
+# ASGI server
+uvicorn[standard]==0.24.0
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+
+# Data validation
+pydantic==2.5.0
