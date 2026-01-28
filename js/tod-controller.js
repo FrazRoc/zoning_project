@@ -13,13 +13,14 @@ class TODController {
         // Default configuration (V2 Ballot Measure)
         this.config = {
             rings: [
-                { distance: 500, height: 8, zone: 'MX-8' },
-                { distance: 1000, height: 5, zone: 'RX-5x' },
-                { distance: 1500, height: 3, zone: 'MU-3x' }
+                { distance: 500, height: 8, zone: 'C-MX-8x' },
+                { distance: 1000, height: 5, zone: 'G-RX-5x' },
+                { distance: 1500, height: 3, zone: 'G-MU-3x' }
             ],
             include_light_rail: true,
             include_brt: false,
-            include_frequent_bus: false
+            include_frequent_bus: false,
+            exclude_unlikely: true
         };
         
         console.log('TOD Controller initialized');

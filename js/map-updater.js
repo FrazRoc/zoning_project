@@ -82,9 +82,9 @@ class MapUpdater {
         
         return {
             fillColor: color,
-            weight: 1,
+            weight: 2,
             opacity: 0.8,
-            color: 'white',
+            color: 'white', /* outline color of parcel box */
             fillOpacity: 0.6
         };
     }
