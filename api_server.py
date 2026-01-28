@@ -221,17 +221,36 @@ app.add_middleware(
 # ============================================================================
 
 class RingConfig(BaseModel):
-    """Configuration for a single TOD ring"""
+    """Configuration for a single policy ring"""
     distance: int  # Distance in feet
     height: int    # Building height in stories
     zone: str      # Zoning code (e.g., 'C-MX-8x')
 
 class TODPolicyConfig(BaseModel):
     """Configuration for TOD policy evaluation"""
+    enabled: bool = True
     rings: List[RingConfig]
     include_light_rail: bool = True
     include_brt: bool = False
     include_frequent_bus: bool = False
+
+class PODPolicyConfig(BaseModel):
+    """Configuration for POD (Park-Oriented Development) policy"""
+    enabled: bool = True
+    regional_parks: List[RingConfig]  # Inner: 250ft, Outer: 750ft
+    community_parks: List[RingConfig]  # Inner: 250ft only
+
+class BODPolicyConfig(BaseModel):
+    """Configuration for BOD (Bus-Oriented Development) policy"""
+    enabled: bool = True
+    brt_lines: List[RingConfig]  # Inner: 250ft, Outer: 750ft
+    medium_freq_bus: List[RingConfig]  # Inner: 250ft only
+
+class MultiPolicyConfig(BaseModel):
+    """Configuration for evaluating multiple policies"""
+    tod: Optional[TODPolicyConfig] = None
+    pod: Optional[PODPolicyConfig] = None
+    bod: Optional[BODPolicyConfig] = None
     exclude_unlikely: bool = True
 
 class ParcelSummary(BaseModel):
@@ -244,6 +263,7 @@ class ParcelSummary(BaseModel):
     assigned_height: int
     assigned_zone: str
     potential_units: int
+    policy_source: str  # 'TOD', 'POD', 'BOD', or 'TOD+POD' for overlaps
 
 class PolicyResult(BaseModel):
     """Result of policy evaluation"""
@@ -608,6 +628,241 @@ async def get_rail_lines():
             return lines
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/evaluate-policies")
+async def evaluate_policies(config: MultiPolicyConfig) -> Dict:
+    """
+    Evaluate multiple policies (TOD, POD, BOD) and combine results.
+    When policies overlap, the highest zoning wins.
+    """
+    
+    all_parcels = {}  # parcel_id -> {height, zone, policy_source, ...}
+    policy_stats = {}
+    
+    # Build the unlikely development filter
+    unlikely_filter = ""
+    if config.exclude_unlikely:
+        unlikely_filter = """
+        AND (owner_type NOT IN ('school', 'govt') OR owner_type IS NULL)
+        AND (
+            (res_orig_year_built IS NULL AND com_orig_year_built IS NULL)
+            OR LEAST(COALESCE(res_orig_year_built, 9999), COALESCE(com_orig_year_built, 9999)) <= 2011
+        )
+        AND (
+            improvement_value IS NULL 
+            OR land_value IS NULL 
+            OR land_value = 0 
+            OR (improvement_value / NULLIF(land_value, 0)) < 1.5
+        )
+        """
+    
+    # ========================================================================
+    # POD (Park-Oriented Development)
+    # ========================================================================
+    if config.pod and config.pod.enabled:
+        print("Evaluating POD policy...")
+        
+        # Process Regional Parks
+        for ring in config.pod.regional_parks:
+            query = f"""
+                SELECT 
+                    parcel_id,
+                    address,
+                    zone_district,
+                    land_area_acres,
+                    distance_to_regional_park,
+                    geometry_geojson
+                FROM parcels
+                WHERE distance_to_regional_park IS NOT NULL
+                AND distance_to_regional_park <= {ring.distance}
+                AND land_area_acres > 0
+                AND zone_district NOT LIKE 'CMP%'
+                AND zone_district NOT LIKE 'H-%'
+                AND zone_district NOT LIKE 'CPV%'
+                AND zone_district NOT LIKE 'DIA%'
+                AND zone_district NOT LIKE 'OS-%'
+                AND zone_district NOT LIKE 'PUD%'
+                AND zone_district NOT IN ('I-A', 'I-B', 'FX-1', 'FX-2')
+                AND property_class NOT LIKE '%CONDOMINIUM%'
+                AND property_class != 'VACANT LAND /GENERAL COMMON ELEMENTS'
+                {unlikely_filter};
+            """
+            
+            with engine.connect() as conn:
+                result = conn.execute(text(query))
+                for row in result:
+                    parcel_id = row[0]
+                    
+                    # Only update if this is higher than existing
+                    if parcel_id not in all_parcels or ring.height > all_parcels[parcel_id]['height']:
+                        all_parcels[parcel_id] = {
+                            'parcel_id': parcel_id,
+                            'address': row[1],
+                            'zone_district': row[2],
+                            'land_area_acres': float(row[3]),
+                            'distance': float(row[4]),
+                            'height': ring.height,
+                            'zone': ring.zone,
+                            'policy_source': 'POD-Regional',
+                            'geometry_geojson': row[5]
+                        }
+        
+        # Process Community Parks
+        for ring in config.pod.community_parks:
+            query = f"""
+                SELECT 
+                    parcel_id,
+                    address,
+                    zone_district,
+                    land_area_acres,
+                    distance_to_community_park,
+                    geometry_geojson
+                FROM parcels
+                WHERE distance_to_community_park IS NOT NULL
+                AND distance_to_community_park <= {ring.distance}
+                AND land_area_acres > 0
+                AND zone_district NOT LIKE 'CMP%'
+                AND zone_district NOT LIKE 'H-%'
+                AND zone_district NOT LIKE 'CPV%'
+                AND zone_district NOT LIKE 'DIA%'
+                AND zone_district NOT LIKE 'OS-%'
+                AND zone_district NOT LIKE 'PUD%'
+                AND zone_district NOT IN ('I-A', 'I-B', 'FX-1', 'FX-2')
+                AND property_class NOT LIKE '%CONDOMINIUM%'
+                AND property_class != 'VACANT LAND /GENERAL COMMON ELEMENTS'
+                {unlikely_filter};
+            """
+            
+            with engine.connect() as conn:
+                result = conn.execute(text(query))
+                for row in result:
+                    parcel_id = row[0]
+                    
+                    # Only update if this is higher than existing
+                    if parcel_id not in all_parcels or ring.height > all_parcels[parcel_id]['height']:
+                        all_parcels[parcel_id] = {
+                            'parcel_id': parcel_id,
+                            'address': row[1],
+                            'zone_district': row[2],
+                            'land_area_acres': float(row[3]),
+                            'distance': float(row[4]),
+                            'height': ring.height,
+                            'zone': ring.zone,
+                            'policy_source': 'POD-Community',
+                            'geometry_geojson': row[5]
+                        }
+        
+        policy_stats['POD'] = {'parcels': 0, 'units': 0}
+    
+    # ========================================================================
+    # TOD (Transit-Oriented Development)
+    # ========================================================================
+    if config.tod and config.tod.enabled:
+        print("Evaluating TOD policy...")
+        
+        # Sort rings by distance
+        sorted_rings = sorted(config.tod.rings, key=lambda r: r.distance)
+        max_distance = sorted_rings[-1].distance
+        
+        query = f"""
+            SELECT 
+                parcel_id,
+                address,
+                zone_district,
+                land_area_acres,
+                distance_to_light_rail,
+                geometry_geojson
+            FROM parcels
+            WHERE distance_to_light_rail IS NOT NULL
+            AND distance_to_light_rail <= {max_distance}
+            AND land_area_acres > 0
+            AND zone_district NOT LIKE 'CMP%'
+            AND zone_district NOT LIKE 'H-%'
+            AND zone_district NOT LIKE 'CPV%'
+            AND zone_district NOT LIKE 'DIA%'
+            AND zone_district NOT LIKE 'OS-%'
+            AND zone_district NOT LIKE 'PUD%'
+            AND zone_district NOT IN ('I-A', 'I-B', 'FX-1', 'FX-2')
+            AND property_class NOT LIKE '%CONDOMINIUM%'
+            AND property_class != 'VACANT LAND /GENERAL COMMON ELEMENTS'
+            {unlikely_filter};
+        """
+        
+        with engine.connect() as conn:
+            result = conn.execute(text(query))
+            for row in result:
+                parcel_id = row[0]
+                distance = float(row[4])
+                
+                # Find which ring this parcel belongs to
+                assigned_ring = None
+                for ring in sorted_rings:
+                    if distance <= ring.distance:
+                        assigned_ring = ring
+                        break
+                
+                if assigned_ring:
+                    # Only update if this is higher than existing
+                    if parcel_id not in all_parcels or assigned_ring.height > all_parcels[parcel_id]['height']:
+                        all_parcels[parcel_id] = {
+                            'parcel_id': parcel_id,
+                            'address': row[1],
+                            'zone_district': row[2],
+                            'land_area_acres': float(row[3]),
+                            'distance': distance,
+                            'height': assigned_ring.height,
+                            'zone': assigned_ring.zone,
+                            'policy_source': 'TOD',
+                            'geometry_geojson': row[5]
+                        }
+        
+        policy_stats['TOD'] = {'parcels': 0, 'units': 0}
+    
+    # ========================================================================
+    # Calculate units and aggregate stats
+    # ========================================================================
+    features = []
+    total_units = 0
+    
+    for parcel_id, parcel in all_parcels.items():
+        # Calculate potential units
+        height = parcel['height']
+        acres = parcel['land_area_acres']
+        upa = STORIES_TO_UPA.get(height, height * 20)  # Default fallback
+        potential_units = int(acres * upa)
+        
+        parcel['potential_units'] = potential_units
+        total_units += potential_units
+        
+        # Update policy stats
+        source = parcel['policy_source'].split('-')[0]  # 'POD-Regional' -> 'POD'
+        if source in policy_stats:
+            policy_stats[source]['parcels'] += 1
+            policy_stats[source]['units'] += potential_units
+        
+        # Create GeoJSON feature
+        features.append({
+            'type': 'Feature',
+            'geometry': json.loads(parcel['geometry_geojson']),
+            'properties': {
+                'parcel_id': parcel['parcel_id'],
+                'address': parcel['address'],
+                'assigned_height': parcel['height'],
+                'assigned_zone': parcel['zone'],
+                'potential_units': potential_units,
+                'policy_source': parcel['policy_source']
+            }
+        })
+    
+    return {
+        'total_parcels': len(all_parcels),
+        'total_units': total_units,
+        'by_policy': policy_stats,
+        'geojson': {
+            'type': 'FeatureCollection',
+            'features': features
+        }
+    }
 
 if __name__ == "__main__":
     import uvicorn
