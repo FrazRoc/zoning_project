@@ -88,6 +88,9 @@ class ConfigPanel {
                 this.close();
             }
         });
+
+        // Initialize to ballot preset on page load (prevents browser form state caching)
+        this.selectPreset('ballot');
         
         console.log('Config Panel initialized');
     }
