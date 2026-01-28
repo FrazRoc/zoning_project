@@ -10,6 +10,8 @@ services:
         fromDatabase:
           name: mile-high-potential-db
           property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.10.1
 
   # 2. Static Frontend
   - type: web
