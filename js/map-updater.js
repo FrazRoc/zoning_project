@@ -49,13 +49,6 @@ class MapUpdater {
                             opacity: 1
                         });
                     });
-                    
-                    layer.on('mouseout', function() {
-                        this.setStyle({
-                            weight: 1,
-                            opacity: 0.8
-                        });
-                    });
                 }
             }).addTo(this.map);
             
