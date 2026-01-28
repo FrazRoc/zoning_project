@@ -301,37 +301,67 @@
         width: 100%;
         max-width: 100%;
     }
-    
+
     .panel-header {
         padding: 16px;
     }
-    
+
     .panel-content {
         padding: 16px;
     }
-    
+
     .ring-config {
         padding: 12px;
     }
-    
+
     /* Bigger touch targets on mobile */
     .slider::-webkit-slider-thumb {
         width: 28px;
         height: 28px;
     }
-    
+
     .slider::-moz-range-thumb {
         width: 28px;
         height: 28px;
     }
-    
+
     .preset-btn {
         padding: 12px;
         font-size: 15px;
     }
-    
+
     .btn {
         padding: 14px;
         font-size: 15px;
     }
+}
+
+/* Checkbox Group - NEW ADDITION */
+.checkbox-group {
+    margin-top: 12px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    cursor: pointer;
+    accent-color: #667eea;
+}
+
+.filter-hint {
+    margin-top: 6px;
+    margin-left: 28px;
+    font-size: 11px;
+    color: #718096;
+    line-height: 1.4;
 }

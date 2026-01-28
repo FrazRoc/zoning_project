@@ -17,7 +17,7 @@ import json
 # ============================================================================
 
 DB_USER = os.environ.get('USER')
-DATABASE_URL = f"postgresql://{DB_USER}@localhost:5432/mile_high_potential"
+DATABASE_URL = f"postgresql://{DB_USER}@localhost:5432/mile_high_potential_db"
 
 # Create database engine
 engine = create_engine(DATABASE_URL)
@@ -228,6 +228,7 @@ class TODPolicyConfig(BaseModel):
     include_light_rail: bool = True
     include_brt: bool = False
     include_frequent_bus: bool = False
+    exclude_unlikely: bool = True
 
 class ParcelSummary(BaseModel):
     """Summary information for a parcel"""
@@ -375,14 +376,31 @@ async def evaluate_tod(config: TODPolicyConfig) -> Dict:
         AND distance_to_light_rail <= {max_distance}
         AND land_area_acres > 0
         AND zone_district NOT LIKE 'CMP%'
+        AND zone_district NOT LIKE 'H-%'
         AND zone_district NOT LIKE 'CPV%'
         AND zone_district NOT LIKE 'DIA%'
         AND zone_district NOT LIKE 'OS-%'
         AND zone_district NOT LIKE 'PUD%'
         AND zone_district NOT IN ('I-A', 'I-B', 'FX-1', 'FX-2')
         AND property_class NOT LIKE '%CONDOMINIUM%'
-        AND property_class != 'VACANT LAND /GENERAL COMMON ELEMENTS';
+        AND property_class != 'VACANT LAND /GENERAL COMMON ELEMENTS'
     """
+    
+    # Add unlikely development filters if enabled
+    if config.exclude_unlikely:
+        query += """
+        AND (owner_type NOT IN ('school', 'govt') OR owner_type IS NULL)
+        AND (
+            (res_orig_year_built IS NULL AND com_orig_year_built IS NULL)
+            OR LEAST(COALESCE(res_orig_year_built, 9999), COALESCE(com_orig_year_built, 9999)) <= 2011
+        )
+        AND (
+            improvement_value IS NULL 
+            OR land_value IS NULL 
+            OR land_value = 0 
+            OR (improvement_value / NULLIF(land_value, 0)) < 1.5
+        )
+        """
     
     # Execute query
     with engine.connect() as conn:

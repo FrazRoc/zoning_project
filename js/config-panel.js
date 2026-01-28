@@ -90,6 +90,7 @@ class ConfigPanel {
     }
 
     open() {
+        console.log('Config Panel opened');
         this.panel.classList.add('open');
         this.backdrop.classList.add('visible');
         this.isOpen = true;
@@ -153,7 +154,8 @@ class ConfigPanel {
             ],
             include_light_rail: true,
             include_brt: false,
-            include_frequent_bus: false
+            include_frequent_bus: false,
+            exclude_unlikely: document.getElementById('exclude-unlikely').checked
         };
     }
 
