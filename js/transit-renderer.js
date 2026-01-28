@@ -22,6 +22,8 @@ class TransitRenderer {
         this.map = map;
         this.railLinesLayer = null;
         this.stationsLayer = null;
+        this.bufferRingsLayer = null;
+        this.stations = []; // Store stations for buffer updates
     }
 
     /**
@@ -85,6 +87,9 @@ class TransitRenderer {
         try {
             const stations = await window.api.getStations();
             
+            // Store stations for later buffer updates
+            this.stations = stations;
+            
             // Remove existing layer if present
             if (this.stationsLayer) {
                 this.map.removeLayer(this.stationsLayer);
@@ -113,11 +118,68 @@ class TransitRenderer {
             
             this.stationsLayer = L.layerGroup(markers).addTo(this.map);
             
+            // Also load buffer rings
+            this.loadBufferRings(stations);
+            
             console.log('✓ RTD stations loaded:', stations.length);
             return stations.length;
         } catch (error) {
             console.log('Stations not loaded:', error);
             return 0;
+        }
+    }
+
+    /**
+     * Create merged buffer rings around transit stations
+     * @param {Array} stations - Array of station objects with lat/lon
+     * @param {Number} distanceFeet - Buffer distance in feet (default 1500 for Ring 3)
+     */
+    loadBufferRings(stations, distanceFeet = 1500) {
+        try {
+            // Remove existing buffer layer
+            if (this.bufferRingsLayer) {
+                this.map.removeLayer(this.bufferRingsLayer);
+            }
+            
+            // Create buffers around each station
+            const buffers = stations.map(station => {
+                // Create point
+                const point = turf.point([station.lon, station.lat]);
+                // Buffer by distance (converted to miles for turf)
+                return turf.buffer(point, distanceFeet / 5280, { units: 'miles' });
+            });
+            
+            // Union (merge) all overlapping buffers
+            let merged = buffers[0];
+            for (let i = 1; i < buffers.length; i++) {
+                merged = turf.union(merged, buffers[i]);
+            }
+            
+            // Add merged buffer to map
+            this.bufferRingsLayer = L.geoJSON(merged, {
+                style: {
+                    fillColor: '#667eea',
+                    fillOpacity: 0.2,
+                    color: '#667eea',
+                    weight: 2,
+                    opacity: 0.6
+                },
+                pane: 'tilePane'  // Behind everything else
+            }).addTo(this.map);
+            
+            console.log(`✓ Buffer rings created: ${distanceFeet}ft radius`);
+        } catch (error) {
+            console.log('Buffer rings not created:', error);
+        }
+    }
+
+    /**
+     * Update buffer rings with new distance
+     * @param {Number} distanceFeet - Buffer distance in feet
+     */
+    updateBufferRings(distanceFeet) {
+        if (this.stations.length > 0) {
+            this.loadBufferRings(this.stations, distanceFeet);
         }
     }
 

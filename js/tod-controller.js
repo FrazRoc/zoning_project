@@ -5,9 +5,10 @@
  */
 
 class TODController {
-    constructor(map) {
+    constructor(map, transitRenderer = null) {
         this.map = map;
         this.mapUpdater = new MapUpdater(map);
+        this.transitRenderer = transitRenderer;
         this.currentResults = null;
         
         // Default configuration (V2 Ballot Measure)
@@ -56,6 +57,12 @@ class TODController {
         try {
             // Update current config
             this.config = config;
+
+            // Update buffer rings to match Ring 3 distance
+            if (this.transitRenderer && config.rings && config.rings.length >= 3) {
+                const ring3Distance = config.rings[2].distance; // Ring 3 is index 2
+                this.transitRenderer.updateBufferRings(ring3Distance);
+            }
             
             // Call API
             const results = await window.api.evaluateTOD(config);
@@ -144,11 +151,11 @@ class TODController {
 
 // Initialize when map is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Wait a bit for map to be fully initialized
+    // Wait a bit for map and transitRenderer to be fully initialized
     setTimeout(() => {
         // The map is defined globally in the HTML, stored as window.map
         if (typeof map !== 'undefined') {
-            window.todController = new TODController(map);
+            window.todController = new TODController(map, window.transitRenderer);
         } else {
             console.error('Map not found! TOD Controller cannot initialize.');
         }

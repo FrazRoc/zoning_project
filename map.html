@@ -240,6 +240,9 @@
     
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Turf.js for geospatial operations (merging buffers) -->
+    <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
     
     <!-- Our JavaScript Modules -->
     <script src="js/api-client.js"></script>
@@ -354,6 +357,7 @@
         
         // Initialize transit renderer and load stations/rail lines
         const transitRenderer = new TransitRenderer(map);
+        window.transitRenderer = transitRenderer; // Make globally available
         transitRenderer.loadAll().then(result => {
             console.log(`Transit loaded: ${result.linesCount} line segments, ${result.stationsCount} stations`);
         });
