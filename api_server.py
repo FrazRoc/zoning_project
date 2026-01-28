@@ -16,8 +16,12 @@ import json
 # CONFIGURATION
 # ============================================================================
 
-DB_USER = os.environ.get('USER')
-DATABASE_URL = f"postgresql://{DB_USER}@localhost:5432/mile_high_potential_db"
+# Database URL - supports both local development and Render deployment
+DATABASE_URL = os.environ.get(
+    'DATABASE_URL',
+    # Fallback for local development
+    f"postgresql://{os.environ.get('USER')}@localhost:5432/mile_high_potential_db"
+)
 
 # Create database engine
 engine = create_engine(DATABASE_URL)

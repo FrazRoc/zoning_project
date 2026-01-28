@@ -4,7 +4,9 @@
  */
 
 class MileHighAPI {
-    constructor(baseURL = 'http://localhost:8000') {
+    constructor(baseURL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:8000' 
+    : 'https://mile-high-potential-api.onrender.com') {
         this.baseURL = baseURL;
     }
 
