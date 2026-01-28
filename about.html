@@ -190,7 +190,7 @@
     </header>
     
     <nav>
-        <a href="denver_tod_with_parcels_v2.html">← Back to Interactive Map</a>
+        <a href="map.html">← Back to Interactive Map</a>
     </nav>
     
     <div class="container">
@@ -204,32 +204,14 @@
             </p>
             
             <div class="highlight-box">
-                <strong>Current Zoning:</strong> Shows 1,665 parcels that are legally developable today with potential for 
-                approximately 202,583 housing units near RTD light rail stations (within 3/8 mile).<br><br>
-                <strong>After Ballot Measure:</strong> Shows 1,867 parcels (including 202 newly upzoned industrial parcels) with 
-                potential for approximately 266,450 housing units — an increase of <strong>+63,867 units (+31.5%)</strong>.
+                <strong>After Ballot Measure:</strong> Shows 3,649 parcels near rail stations with potential for approximately 49,000 housing units. 
             </div>
             
             <p>
-                By comparing these scenarios side-by-side, you can see exactly how the ballot measure would unlock 
-                housing potential across Denver's transit network. Toggle between views to explore the differences 
-                and click individual parcels to see detailed information.
+                You can see how the ballot measure would unlock 
+                housing potential across Denver's transit network. Play around with upzoning scenarios and click individual parcels to see detailed information.
             </p>
-            
-            <div class="stats">
-                <div class="stat-box">
-                    <span class="number">1,665</span>
-                    <span class="label">Current Opportunity Parcels</span>
-                </div>
-                <div class="stat-box">
-                    <span class="number">1,867</span>
-                    <span class="label">After Ballot Measure</span>
-                </div>
-                <div class="stat-box">
-                    <span class="number">+31.5%</span>
-                    <span class="label">Housing Capacity Increase</span>
-                </div>
-            </div>
+
         </section>
         
         <!-- How It Works Section -->
@@ -238,31 +220,21 @@
             
             <h3>The Interactive Map</h3>
             <p>
-                The map shows parcels color-coded by opportunity type. Use the toggle at the top to switch between 
-                "Current Zoning" and "After Ballot Measure" scenarios.
+                The map shows parcels color-coded by their distance to rail stations. Use the Configure Policy sidebar to examine different scenarios of upzoning and distance from transit.
             </p>
-            
-            <h3>Opportunity Categories</h3>
-            <ul>
-                <li><strong>Large Vacant Land:</strong> Vacant parcels over 0.5 acres ready for development</li>
-                <li><strong>SF on Multi-Unit Zoning:</strong> Single-family homes on land zoned for apartments</li>
-                <li><strong>Commercial on Mixed-Use Zoning:</strong> Commercial buildings in mixed-use zones that could add housing</li>
-                <li><strong>Industrial Conversion:</strong> Industrial properties already zoned for residential conversion</li>
-                <li><strong>Industrial Needs Rezoning:</strong> Industrial land that would be upzoned by the ballot measure</li>
-                <li><strong>Teardown Candidates:</strong> Aging structures where land value exceeds building value</li>
-            </ul>
+
             
             <h3>The Ballot Measure</h3>
             <p>The proposed ballot measure would create three zoning tiers based on distance from RTD light rail stations:</p>
             <ul>
-                <li><strong>Tier 1 (≤660 feet):</strong> C-MX-8x zoning → 8 stories allowed</li>
-                <li><strong>Tier 2 (≤1,320 feet):</strong> G-RX-5x zoning → 5 stories allowed</li>
-                <li><strong>Tier 3 (≤1,980 feet):</strong> G-MU-3x zoning → 3 stories allowed</li>
+                <li><strong>Tier 1 (≤500 feet):</strong> C-MX-8x zoning → 8 stories allowed</li>
+                <li><strong>Tier 2 (≤1,000 feet):</strong> G-RX-5x zoning → 5 stories allowed</li>
+                <li><strong>Tier 3 (≤1,500 feet):</strong> G-MU-3x zoning → 3 stories allowed</li>
             </ul>
             
             <div class="highlight-box">
                 <strong>Important:</strong> The ballot measure only upzones — it never downzones. If existing zoning 
-                already allows more height, that zoning is preserved.
+                already allows more height, that zoning is preserved and those parcels will not be shown on the map.
             </div>
         </section>
         
@@ -284,22 +256,12 @@
                 <li>12+ stories: 220-450 units/acre (high-rise)</li>
             </ul>
             
-            <h3>Two Scenarios</h3>
-            
-            <p><strong>Current Zoning Scenario:</strong></p>
-            <ul>
-                <li>Includes only parcels that are <em>legally developable today</em> for residential use</li>
-                <li>Excludes 202 industrial-zoned parcels that would require rezoning (I-A/I-B zones)</li>
-                <li>Based on existing Denver zoning code height limits and development rights</li>
-                <li>Total: 1,665 parcels with approximately 202,583 potential units</li>
-            </ul>
+            <h3>Ballot Scenarios</h3>
             
             <p><strong>After Ballot Measure Scenario:</strong></p>
             <ul>
-                <li>Applies ballot measure upzoning tiers based on distance to rail stations (3 tiers within 3/8 mile)</li>
-                <li>Includes formerly industrial parcels that would be upzoned to residential/mixed-use</li>
-                <li>Preserves existing zoning if it's already more permissive (never downzones)</li>
-                <li>Total: 1,867 parcels with approximately 266,450 potential units (+31.5%)</li>
+                <li>Applies ballot measure upzoning tiers based on distance to rail stations (3 tiers within 1500 feet)</li>
+                <li>Preserves existing zoning if it's already more permissive (
             </ul>
             
             <div class="highlight-box">
@@ -332,7 +294,7 @@
         <section class="cta-section">
             <h2>Explore the Data</h2>
             <p>Ready to dive in? The interactive map lets you click on individual parcels to see detailed information about each opportunity.</p>
-            <a href="denver_tod_with_parcels_v2.html" class="btn">View Interactive Map</a>
+            <a href="map.html" class="btn">View Interactive Map</a>
         </section>
     </div>
     
@@ -342,7 +304,7 @@
             <a href="https://github.com/FrazRoc/zoning_project" target="_blank">View on GitHub</a>
         </p>
         <p style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">
-            Last updated: G-RX-5x
+            Last updated: 1/28/26
         </p>
     </footer>
 </body>
