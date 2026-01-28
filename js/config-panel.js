@@ -39,9 +39,12 @@ class ConfigPanel {
         this.resultDisplays = {
             parcels: document.getElementById('result-parcels'),
             units: document.getElementById('result-units'),
-            ring1: document.getElementById('result-ring1'),
-            ring2: document.getElementById('result-ring2'),
-            ring3: document.getElementById('result-ring3'),
+            ring1Parcels: document.getElementById('result-ring1-parcels'),
+            ring1Units: document.getElementById('result-ring1-units'),
+            ring2Parcels: document.getElementById('result-ring2-parcels'),
+            ring2Units: document.getElementById('result-ring2-units'),
+            ring3Parcels: document.getElementById('result-ring3-parcels'),
+            ring3Units: document.getElementById('result-ring3-units'),
         };
         
         this.isOpen = false;
@@ -166,10 +169,15 @@ class ConfigPanel {
         this.resultDisplays.parcels.textContent = formatNumber(results.total_parcels);
         this.resultDisplays.units.textContent = formatNumber(results.total_units);
         
-        // Ring breakdowns
-        this.resultDisplays.ring1.textContent = formatNumber(results.parcels_by_ring['Ring 1'] || 0);
-        this.resultDisplays.ring2.textContent = formatNumber(results.parcels_by_ring['Ring 2'] || 0);
-        this.resultDisplays.ring3.textContent = formatNumber(results.parcels_by_ring['Ring 3'] || 0);
+        // Ring breakdowns - parcels and units
+        this.resultDisplays.ring1Parcels.textContent = formatNumber(results.parcels_by_ring['Ring 1'] || 0);
+        this.resultDisplays.ring1Units.textContent = formatNumber(results.units_by_ring['Ring 1'] || 0);
+        
+        this.resultDisplays.ring2Parcels.textContent = formatNumber(results.parcels_by_ring['Ring 2'] || 0);
+        this.resultDisplays.ring2Units.textContent = formatNumber(results.units_by_ring['Ring 2'] || 0);
+        
+        this.resultDisplays.ring3Parcels.textContent = formatNumber(results.parcels_by_ring['Ring 3'] || 0);
+        this.resultDisplays.ring3Units.textContent = formatNumber(results.units_by_ring['Ring 3'] || 0);
     }
 
     showLoading() {
