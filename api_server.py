@@ -473,7 +473,7 @@ async def get_parks(db: Session = Depends(get_db)):
             SELECT formal_name, ballot_park_type, land_area_acres, geometry
             FROM parks
             WHERE ballot_park_type in ('community', 'regional')
-            ORDER BY land_area_acres ASC
+            ORDER BY land_area_acres ASC;
         """))
         
         features = []
