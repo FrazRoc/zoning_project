@@ -60,9 +60,9 @@ print("\n2. Loading parks...")
 with engine.connect() as conn:
     # Load community parks
     result = conn.execute(text("""
-        SELECT park_id, name, geometry_geojson
+        SELECT id, formal_name, geometry
         FROM parks
-        WHERE park_type = 'community';
+        WHERE ballot_park_type = 'community';
     """))
     
     community_parks = []
@@ -70,7 +70,7 @@ with engine.connect() as conn:
         geom = json.loads(row[2])
         community_parks.append({
             'id': row[0],
-            'name': row[1],
+            'formal_name': row[1],
             'geometry': shape(geom)
         })
     
@@ -78,9 +78,9 @@ with engine.connect() as conn:
     
     # Load regional parks
     result = conn.execute(text("""
-        SELECT park_id, name, geometry_geojson
+        SELECT id, formal_name, geometry
         FROM parks
-        WHERE park_type = 'regional';
+        WHERE ballot_park_type = 'regional';
     """))
     
     regional_parks = []
@@ -88,7 +88,7 @@ with engine.connect() as conn:
         geom = json.loads(row[2])
         regional_parks.append({
             'id': row[0],
-            'name': row[1],
+            'formal_name': row[1],
             'geometry': shape(geom)
         })
     

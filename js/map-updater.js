@@ -195,16 +195,16 @@ class MapUpdater {
         }
         
         return `
-            <div style="padding: 0; width: 350px;">
+            <div style="padding: 0; width: 330px;">
                 <!-- Red Header with Address -->
-                <div style="background: #DC2626; color: white; padding: 16px; font-size: 18px; font-weight: 700;">
+                <div style="background: #DC2626; color: white; padding: 12px; font-size: 18px; font-weight: 700;">
                     ${headerText}
                 </div>
                 
                 <!-- Property Information -->
-                <div style="padding: 16px; background: white;">
+                <div style="padding: 14px; background: white;">
                     <table style="width: 100%; font-size: 14px; color: #333; border-collapse: collapse;">
-                        <tr style="border-top: 1px solid #e5e7eb;">
+                        <tr>
                             <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Property Type:</td>
                             <td style="padding: 4px 0; text-align: right; text-transform: capitalize;">${parcel.property_type || 'N/A'}</td>
                         </tr>
@@ -252,8 +252,8 @@ class MapUpdater {
                 </div>
                 
                 <!-- Development Potential Section -->
-                <div style="background: #EEF2FF; padding: 16px; border-top: 1px solid #e5e7eb;">
-                    <div style="font-size: 15px; font-weight: 700; color: #333; margin-bottom: 10px;">
+                <div style="background: #EEF2FF; padding: 12px; border-top: 1px solid #e5e7eb;">
+                    <div style="font-size: 14px; font-weight: 700; color: #333; margin-bottom: 10px;">
                         Development Potential
                     </div>
                     <table style="width: 100%; font-size: 14px; color: #333; border-collapse: collapse;">
@@ -284,8 +284,8 @@ class MapUpdater {
                     </table>
                     
                     <!-- Highlighted Units -->
-                    <div style="background: white; border: 2px solid #3B82F6; border-radius: 6px; padding: 10px; margin-top: 10px; text-align: center;">
-                        <div style="color: #3B82F6; font-size: 20px; font-weight: 900;">
+                    <div style="background: white; border: 2px solid #3B82F6; border-radius: 6px; padding: 10px; margin-top: 6px; text-align: center;">
+                        <div style="color: #3B82F6; font-size: 16px; font-weight: 900;">
                             ~${formatNumber(parcel.potential_units)} potential units
                         </div>
                     </div>

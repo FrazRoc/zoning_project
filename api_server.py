@@ -464,6 +464,40 @@ async def get_rail_lines(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+@app.get("/api/parks")
+async def get_parks(db: Session = Depends(get_db)):
+    """Get all parks over 10 acres as a GeoJSON FeatureCollection"""
+    try:
+        # 2. Ordered by size so smaller parks don't get 'hidden' by larger ones in rendering
+        result = db.execute(text("""
+            SELECT formal_name, ballot_park_type, land_area_acres, geometry
+            FROM parks
+            WHERE ballot_park_type in ('community', 'regional')
+            ORDER BY land_area_acres ASC
+        """))
+        
+        features = []
+        for row in result:
+            # Parse the geojson string into a dict so it nests correctly
+            geom = json.loads(row[3])
+            
+            features.append({
+                "type": "Feature",
+                "geometry": geom,
+                "properties": {
+                    "name": row[0],
+                    "park_type": row[1],
+                    "land_area_acres": float(row[2])
+                }
+            })
+            
+        return {
+            "type": "FeatureCollection",
+            "features": features
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
 @app.post("/api/evaluate-policies")
 async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get_db)):
     # Registry to handle "Highest Height Wins" across different policy types

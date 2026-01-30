@@ -321,6 +321,13 @@ class ConfigPanel {
                 console.log("map updater exists, calling updateParcels")
                 window.mapUpdater.updateParcels(results.geojson);
             }
+
+            // Update park buffer (if park renderer exists)
+            if (window.parkRenderer) {
+                console.log("parkRenderer exists, calling updateBuffers")
+                window.parkRenderer.updateBuffers(this.podSliders.regionalOuterDistance.value, this.podSliders.communityDistance.value);
+            }
+
             
         } catch (error) {
             console.error('Failed to apply configuration:', error);

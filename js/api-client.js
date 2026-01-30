@@ -100,6 +100,22 @@ class MileHighAPI {
             throw error;
         }
     }
+
+    /**
+     * Get all Parks over 10 acres
+     */
+    async getParks() {
+        try {
+            const response = await fetch(`${this.baseURL}/api/parks`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Failed to get parks:', error);
+            throw error;
+        }
+    }
 }
 
 // Create global API instance

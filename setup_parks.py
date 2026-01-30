@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, text
 import json
 
 print("="*70)
-print("IDENTIFYING DENVER PARKS FROM PARCELS")
+print("")
 print("="*70)
 
 # Database connection
@@ -34,18 +34,67 @@ with engine.connect() as conn:
     conn.execute(text("DROP TABLE IF EXISTS parks CASCADE;"))
     
     # Create parks table
+    cur.execute("DROP TABLE IF EXISTS parks")
     conn.execute(text("""
         CREATE TABLE parks (
-            id SERIAL PRIMARY KEY,
+            id SERIAL PRIMARY KEY ,
             park_id VARCHAR(50) UNIQUE,
             name VARCHAR(255),
-            park_type VARCHAR(50), -- 'community' or 'regional'
+            formal_name VARCHAR(255),
+            park_class VARCHAR(50),
+            ballot_park_type VARCHAR(50), -- 'community' or 'regional'
             geometry_geojson TEXT,
             land_area_acres NUMERIC,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """))
     
+""""""""""""
+    cur.execute("DROP TABLE IF EXISTS parks")
+    cur.execute('''
+        CREATE TABLE parks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            formal_name TEXT,
+            park_class TEXT,
+            gis_acres REAL,
+            ballot_park_type TEXT,
+            geometry_geojson TEXT
+        )
+    ''')
+
+    with open(GEOJSON_FILE, 'r') as f:
+        data = json.load(f)
+
+    def classify_ballot_type(p_class, acres):
+        p_class = str(p_class).lower() if p_class else ""
+        if p_class == 'regional' and acres > 75:
+            return 'regional'
+        elif p_class in ['regional', 'neighborhood', 'community', 'linear'] and 10 <= acres <= 75:
+            return 'community'
+        return 'ineligible'
+
+    for feature in data['features']:
+        props = feature['properties']
+        acres = float(props.get('GIS_ACRES', 0))
+        p_class = props.get('PARK_CLASS')
+        ballot_type = classify_ballot_type(p_class, acres)
+        
+        cur.execute('''
+            INSERT INTO parks (formal_name, park_class, gis_acres, ballot_park_type, geometry_geojson)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            props.get('FORMAL_NAME'),
+            p_class,
+            acres,
+            ballot_type,
+            json.dumps(feature['geometry'])
+        ))
+
+    conn.commit()
+    conn.close()
+    print("Import complete.")
+"""""""""""""""""
+
     # Create index
     conn.execute(text("CREATE INDEX parks_type_idx ON parks(park_type);"))
     

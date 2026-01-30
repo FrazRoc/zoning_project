@@ -88,21 +88,21 @@
     <div id="legend" class="fixed bottom-3 right-3 w-72 bg-white rounded-lg shadow-lg z-[999]">
         <div id="legend-content" class="p-4">
             <h4 class="text-base font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
-                <span>Transit-Oriented Development</span>
+                <span>Upzone Development Potential</span>
             </h4>
             
             <div class="space-y-2">
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF0000;"></span>
-                    <span class="text-sm text-gray-700">Ring 1 (≤500ft) - <span id="legend-ring1-count">--</span></span>
+                    <span class="text-sm text-gray-700">High Density - <span id="legend-ring1-count">--</span></span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF8C00;"></span>
-                    <span class="text-sm text-gray-700">Ring 2 (≤1000ft) - <span id="legend-ring2-count">--</span></span>
+                    <span class="text-sm text-gray-700">Medium Density - <span id="legend-ring2-count">--</span></span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FFD700;"></span>
-                    <span class="text-sm text-gray-700">Ring 3 (≤1500ft) - <span id="legend-ring3-count">--</span></span>
+                    <span class="text-sm text-gray-700">Low Density - <span id="legend-ring3-count">--</span></span>
                 </div>
             </div>
         </div>
@@ -363,6 +363,7 @@
     <!-- Our JavaScript Modules -->
     <script src="js/api-client.js"></script>
     <script src="js/transit-renderer.js"></script>
+    <script src="js/park-renderer.js"></script>
     <script src="js/tod-controller.js"></script>
     <script src="js/map-updater.js"></script>
     <script src="js/config-panel-multi.js"></script>
@@ -477,6 +478,33 @@
         transitRenderer.loadAll().then(result => {
             console.log(`Transit loaded: ${result.linesCount} line segments, ${result.stationsCount} stations`);
         });
+
+        // Initialize transit renderer and load stations/rail lines
+        const parkRenderer = new ParkRenderer(map);
+        window.parkRenderer = parkRenderer; // Make globally available
+        parkRenderer.loadParks().then(result => {
+            console.log('i hope we made it this far');
+        });
+
+/*        // Function to get current POD values and update map
+        const syncParkBuffers = () => {
+            // We use the "Outer Ring" distance for the main visual buffer
+            const regDist = parseInt(document.getElementById('pod-regional-outer-distance').value);
+            const commDist = parseInt(document.getElementById('pod-community-distance').value);
+            parkRenderer.updateBuffers(regDist, commDist);
+        };
+
+        // Listen to Regional Outer Distance Slider
+        document.getElementById('pod-regional-outer-distance').addEventListener('input', (e) => {
+            document.getElementById('pod-regional-outer-distance-value').textContent = e.target.value;
+            syncParkBuffers();
+        });
+
+        // Listen to Community Distance Slider
+        document.getElementById('pod-community-distance').addEventListener('input', (e) => {
+            document.getElementById('pod-community-distance-value').textContent = e.target.value;
+            syncParkBuffers();
+        });*/
 
         //Evan testing this...
         // Initialize mapUpdater
