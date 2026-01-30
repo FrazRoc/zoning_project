@@ -40,16 +40,16 @@ class MileHighAPI {
     }
 
     /**
-     * Evaluate TOD policy with custom configuration
-     * @param {Object} config - Policy configuration
-     * @param {Array} config.rings - Array of {distance, height, zone} objects
-     * @param {boolean} config.include_light_rail
-     * @param {boolean} config.include_brt
-     * @param {boolean} config.include_frequent_bus
+     * Evaluate multiple policies (TOD, POD, BOD) with custom configuration
+     * @param {Object} config - Multi-policy configuration
+     * @param {Object} config.tod - TOD policy config (optional)
+     * @param {Object} config.pod - POD policy config (optional)
+     * @param {Object} config.bod - BOD policy config (optional)
+     * @param {boolean} config.exclude_unlikely - Exclude unlikely development parcels
      */
-    async evaluateTOD(config) {
+    async evaluatePolicies(config) {
         try {
-            const response = await fetch(`${this.baseURL}/api/evaluate-tod`, {
+            const response = await fetch(`${this.baseURL}/api/evaluate-policies`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -64,24 +64,7 @@ class MileHighAPI {
 
             return await response.json();
         } catch (error) {
-            console.error('Failed to evaluate TOD policy:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Get details for a specific parcel
-     * @param {string} parcelId - Parcel ID
-     */
-    async getParcel(parcelId) {
-        try {
-            const response = await fetch(`${this.baseURL}/api/parcel/${parcelId}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Failed to get parcel:', error);
+            console.error('Failed to evaluate policies:', error);
             throw error;
         }
     }

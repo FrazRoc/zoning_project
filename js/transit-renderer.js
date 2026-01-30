@@ -159,7 +159,7 @@ class TransitRenderer {
             this.bufferRingsLayer = L.geoJSON(merged, {
                 style: {
                     fillColor: '#667eea',
-                    fillOpacity: 0.2,
+                    fillOpacity: 0.4,
                     color: '#667eea',
                     weight: 2,
                     opacity: 0.6

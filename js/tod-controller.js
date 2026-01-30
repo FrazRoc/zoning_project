@@ -14,9 +14,9 @@ class TODController {
         // Default configuration (V2 Ballot Measure)
         this.config = {
             rings: [
-                { distance: 500, height: 8, zone: 'C-MX-8x' },
-                { distance: 1000, height: 5, zone: 'G-RX-5x' },
-                { distance: 1500, height: 3, zone: 'G-MU-3x' }
+                { distance: 500, height: 8, zone: 'C-MX-8x', density: "high" },
+                { distance: 1000, height: 5, zone: 'G-RX-5x', density: "med" },
+                { distance: 1500, height: 3, zone: 'G-MU-3x', density: "low" }
             ],
             include_light_rail: true,
             include_brt: false,
@@ -39,7 +39,8 @@ class TODController {
             console.log('✓ API connection successful');
             
             // Load initial data
-            await this.evaluate(this.config);
+            //Evan commented this out
+            //await this.evaluate(this.config);
             
         } catch (error) {
             console.error('Failed to initialize:', error);
@@ -66,7 +67,6 @@ class TODController {
             
             // Call API
             const results = await window.api.evaluateTOD(config);
-            console.log('API Results:', results);
             
             // Store results
             this.currentResults = results;

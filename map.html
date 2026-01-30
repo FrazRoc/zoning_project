@@ -50,7 +50,15 @@
         <div class="p-4">
             <div class="mb-3">
                 <h1 class="text-4xl font-black mb-1">Mile High Potential</h1>
-                <p class="text-base text-blue-100 leading-tight">Transit-oriented development opportunities in Denver</p>
+                <p class="text-base text-blue-100 leading-tight">Zoning & Development Policy Analysis</p>
+            </div>
+
+            <!-- ADD THIS NEW SECTION -->
+            <div class="active-policies-section">
+                <div class="active-policies-label">Active Policies:</div>
+                <div id="active-policies" class="active-policies-container">
+                    <!-- Policy bubbles dynamically inserted by JS -->
+                </div>
             </div>
             
             <div id="stats-box" class="text-center px-2">
@@ -104,129 +112,237 @@
     <div id="config-backdrop" class="config-backdrop"></div>
     
     <div id="config-panel" class="config-panel">
-        <!-- Panel Header -->
+        <!-- Header -->
         <div class="panel-header">
-            <h2>Configure Policy</h2>
-            <button id="close-config-btn" class="panel-close" aria-label="Close">&times;</button>
+            <h2>Configure Policies</h2>
+            <button id="close-config-btn" class="close-btn">×</button>
         </div>
         
-        <!-- Panel Content -->
         <div class="panel-content">
-            <!-- Presets -->
-            <div class="panel-section">
-                <div class="section-title">Presets</div>
-                <div class="preset-buttons">
-                    <button class="preset-btn active" data-preset="ballot">Ballot Measure</button>
-                    <button class="preset-btn" data-preset="custom">Custom</button>
+            
+            <!-- TOD POLICY SECTION -->
+            <div class="policy-section" id="tod-section">
+            <div class="accordion-header">
+                <div class="policy-header-content">
+                    <input type="checkbox" id="tod-enabled" checked>
+                    <label for="tod-enabled">
+                        <h3>Transit-Oriented Development (TOD)</h3>
+                    </label>
+                </div>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            
+            <div id="tod-accordion" class="accordion-body">
+                <div class="ring-config">
+                    <h4>Inner Ring - High Density</h4>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Distance to Rail:</span>
+                            <span class="slider-value"> 
+                                <span id="tod-ring1-distance-value">500</span> ft 
+                            </span>
+                        </div>
+                        <input class="slider" type="range" id="tod-ring1-distance" min="250" max="1000" value="500" step="50">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Upzone Height:</span>
+                            <span class="slider-value"> 
+                                <span id="tod-ring1-height-value">8</span> stories 
+                            </span>
+                        </div>
+                        <input class="slider" type="range" id="tod-ring1-height" min="3" max="12" value="8">
+                    </div>
+                </div>
+                
+                <div class="ring-config">
+                    <h4>Middle Ring - Medium Density</h4>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Distance to Rail:</span>
+                            <span class="slider-value"> 
+                                <span id="tod-ring2-distance-value">1000</span> ft 
+                            </span>
+                        </div>
+                        <input class="slider" type="range" id="tod-ring2-distance" min="500" max="1500" value="1000" step="50">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Upzone Height:</span>
+                            <span class="slider-value"> 
+                                <span id="tod-ring2-height-value">5</span> stories 
+                            </span>
+                        </div>
+                        <input class="slider" type="range" id="tod-ring2-height" min="3" max="12" value="5">
+                    </div>
+                </div>
+                
+                <div class="ring-config">
+                    <h4>Outer Ring - Low Density</h4>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Distance to Rail:</span>
+                            <span class="slider-value"> 
+                                <span id="tod-ring3-distance-value">1500</span> ft 
+                            </span>
+                        </div>
+                        <input class="slider" type="range" id="tod-ring3-distance" min="750" max="2000" value="1500" step="50">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Upzone Height:</span>
+                            <span class="slider-value"> 
+                                <span id="tod-ring3-height-value">3</span> stories 
+                            </span>
+                        </div>
+                        <input class="slider" type="range" id="tod-ring3-height" min="3" max="12" value="3">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="policy-section" id="pod-section">
+            <div class="accordion-header">
+                <div class="policy-header-content">
+                    <input type="checkbox" id="pod-enabled" checked>
+                    <label for="pod-enabled">
+                        <h3>Park-Oriented Development (POD)</h3>
+                    </label>
+                </div>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            
+            <div id="pod-accordion" class="accordion-body">
+                <div class="park-config">
+                    <h4>Regional Parks (75+ acres)</h4>
+                    
+                    <div class="ring-config">
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Inner Ring Distance:</span>
+                                <span class="slider-value"> 
+                                    <span id="pod-regional-inner-distance-value">250</span> ft 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="pod-regional-inner-distance" min="100" max="500" value="250" step="50">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Upzone Height:</span>
+                                <span class="slider-value"> 
+                                    <span id="pod-regional-inner-height-value">5</span> stories 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="pod-regional-inner-height" min="3" max="12" value="5">
+                        </div>
+                    </div>
+                    
+                    <div class="ring-config">
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Outer Ring Distance:</span>
+                                <span class="slider-value"> 
+                                    <span id="pod-regional-outer-distance-value">750</span> ft 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="pod-regional-outer-distance" min="500" max="1000" value="750" step="50">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Upzone Height:</span>
+                                <span class="slider-value"> 
+                                    <span id="pod-regional-outer-height-value">3</span> stories 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="pod-regional-outer-height" min="3" max="12" value="3">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="park-config">
+                    <h4>Community Parks (10-75 acres)</h4>
+                    <div class="ring-config">
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Buffer Distance:</span>
+                                <span class="slider-value"> 
+                                    <span id="pod-community-distance-value">250</span> ft 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="pod-community-distance" min="100" max="500" value="250" step="50">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Upzone Height:</span>
+                                <span class="slider-value"> 
+                                    <span id="pod-community-height-value">3</span> stories 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="pod-community-height" min="3" max="12" value="3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            
+            <!-- BOD POLICY SECTION (Placeholder for future) -->
+            <div class="policy-section disabled" id="bod-section">
+                <div class="accordion-header">
+                    <div class="policy-header-content">
+                        <input type="checkbox" id="bod-enabled">
+                        <label for="bod-enabled">
+                            <h3>Bus-Oriented Development (BOD)</h3>
+                            <span class="coming-soon">Coming Soon</span>
+                        </label>
+                    </div>
+                    <span class="accordion-toggle">▼</span>
+                </div>
+                
+                <div id="bod-accordion" class="accordion-body">
+                    <p class="placeholder-text">Bus-oriented development configuration will be available soon.</p>
                 </div>
             </div>
             
-            <!-- Ring 1 Configuration -->
-            <div class="ring-config">
-                <div class="ring-title">Ring 1 (Innermost)</div>
-                
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Distance to Transit</span>
-                        <span class="slider-value"><span id="ring1-distance-value">500</span> ft</span>
-                    </div>
-                    <input type="range" class="slider" id="ring1-distance" 
-                           min="330" max="2640" step="10" value="500">
-                </div>
-                
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Upzone Height</span>
-                        <span class="slider-value"><span id="ring1-height-value">8</span> stories</span>
-                    </div>
-                    <input type="range" class="slider" id="ring1-height" 
-                           min="2" max="20" step="1" value="8">
-                </div>
-            </div>
-            
-            <!-- Ring 2 Configuration -->
-            <div class="ring-config">
-                <div class="ring-title">Ring 2 (Middle)</div>
-                
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Distance to Transit</span>
-                        <span class="slider-value"><span id="ring2-distance-value">1000</span> ft</span>
-                    </div>
-                    <input type="range" class="slider" id="ring2-distance" 
-                           min="330" max="2640" step="10" value="1000">
-                </div>
-                
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Upzone Height</span>
-                        <span class="slider-value"><span id="ring2-height-value">5</span> stories</span>
-                    </div>
-                    <input type="range" class="slider" id="ring2-height" 
-                           min="2" max="20" step="1" value="5">
-                </div>
-            </div>
-            
-            <!-- Ring 3 Configuration -->
-            <div class="ring-config">
-                <div class="ring-title">Ring 3 (Outer)</div>
-                
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Distance to Transit</span>
-                        <span class="slider-value"><span id="ring3-distance-value">1500</span> ft</span>
-                    </div>
-                    <input type="range" class="slider" id="ring3-distance" 
-                           min="330" max="2640" step="10" value="1500">
-                </div>
-                
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Upzone Height</span>
-                        <span class="slider-value"><span id="ring3-height-value">3</span> stories</span>
-                    </div>
-                    <input type="range" class="slider" id="ring3-height" 
-                           min="2" max="20" step="1" value="3">
-                </div>
-            </div>
-            
-            <!-- Filter Options -->
+            <!-- FILTERS SECTION -->
             <div class="panel-section">
                 <div class="section-title">Filters</div>
                 <div class="checkbox-group">
-                    <label class="checkbox-label">
+                    
+                    <label for="exclude-unlikely" class="checkbox-label">
                         <input type="checkbox" id="exclude-unlikely" checked>
                         <span>Exclude unlikely development</span>
                     </label>
-                    <div class="filter-hint">Excludes schools, govt, new buildings (&lt;15 years), and high improvement-to-land ratio (≥1.5)</div>
+                    <div class="filter-hint">Excludes schools, govt buildings, new buildings (&lt;15 years), high improvement ratio</div>
+                   
                 </div>
             </div>
             
-            <!-- Results -->
+            <!-- RESULTS SECTION -->
             <div class="results-box">
-                <div class="results-title">
-                    <span>📊</span>
-                    <span>Policy Impact</span>
-                </div>
+                <h4>Combined Impact</h4>
                 
-                <div class="result-stat">
+                <div class="result-row total">
                     <span class="result-label">Total:</span>
-                    <span class="result-value"><span id="result-parcels">--</span> parcels, <span id="result-units">--</span> units</span>
+                    <span class="result-value">
+                        <span id="result-total-parcels">--</span> parcels, 
+                        <span id="result-total-units">--</span> units
+                    </span>
                 </div>
                 
-                <div class="result-stat">
-                    <span class="result-label">Ring 1:</span>
-                    <span class="result-value"><span id="result-ring1-parcels">--</span> parcels, <span id="result-ring1-units">--</span> units</span>
+                <div class="result-row">
+                    <span class="result-label">TOD:</span>
+                    <span class="result-value">
+                        <span id="result-tod-parcels">--</span> parcels, 
+                        <span id="result-tod-units">--</span> units
+                    </span>
                 </div>
                 
-                <div class="result-stat">
-                    <span class="result-label">Ring 2:</span>
-                    <span class="result-value"><span id="result-ring2-parcels">--</span> parcels, <span id="result-ring2-units">--</span> units</span>
-                </div>
-                
-                <div class="result-stat">
-                    <span class="result-label">Ring 3:</span>
-                    <span class="result-value"><span id="result-ring3-parcels">--</span> parcels, <span id="result-ring3-units">--</span> units</span>
+                <div class="result-row">
+                    <span class="result-label">POD:</span>
+                    <span class="result-value">
+                        <span id="result-pod-parcels">--</span> parcels, 
+                        <span id="result-pod-units">--</span> units
+                    </span>
                 </div>
             </div>
         </div>
@@ -234,7 +350,7 @@
         <!-- Panel Actions -->
         <div class="panel-actions">
             <button id="apply-btn" class="btn btn-primary">Apply Changes</button>
-            <button id="reset-btn" class="btn btn-secondary">Reset</button>
+            <button id="reset-btn" class="btn btn-secondary">Reset to Ballot Measure</button>
         </div>
     </div>
     
@@ -249,7 +365,7 @@
     <script src="js/transit-renderer.js"></script>
     <script src="js/tod-controller.js"></script>
     <script src="js/map-updater.js"></script>
-    <script src="js/config-panel.js"></script>
+    <script src="js/config-panel-multi.js"></script>
     
     <!-- Main App Initialization -->
     <script>
@@ -361,6 +477,11 @@
         transitRenderer.loadAll().then(result => {
             console.log(`Transit loaded: ${result.linesCount} line segments, ${result.stationsCount} stations`);
         });
+
+        //Evan testing this...
+        // Initialize mapUpdater
+        const mapUpdater = new MapUpdater(map);
+        window.mapUpdater = mapUpdater; // Make globally available
         
         // Initialize application
         window.addEventListener('DOMContentLoaded', () => {

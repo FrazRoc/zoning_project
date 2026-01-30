@@ -8,11 +8,20 @@ class MapUpdater {
         this.map = map;
         this.parcelLayer = null;
         
-        // Colors for different rings
+        // Colors for different parcels based on ring density 
         this.colors = {
-            ring1: '#FF0000',  // Red
-            ring2: '#FF8C00',  // Orange
-            ring3: '#FFD700',  // Yellow/Gold
+            ring_high: '#FF0000',  // Red
+            ring_med: '#FF8C00',  // Orange
+            ring_low: '#FFD700',  // Yellow/Gold
+        };
+        
+        // Policy colors for multi-policy mode buffers
+        this.policyColors = {
+            'TOD': '#667eea',           // Purple
+            'POD': '#009483',           // Green
+            'POD-Regional': '#009483',
+            'POD-Community': '#009483',
+            'BOD': '#FF6A00',           // Orange
         };
         
         console.log('Map Updater initialized');
@@ -49,11 +58,20 @@ class MapUpdater {
                             opacity: 1
                         });
                     });
+                    
+                    //Mouseout is not need as far as I can tel
+                    /*layer.on('mouseout', function() {
+                        this.setStyle({
+                            weight: 2,
+                            opacity: 0.8
+                        });
+                    });*/
                 }
             }).addTo(this.map);
             
             console.log(`Added ${results.features.length} parcels to map`);
-            
+            console.log(results)
+            console.log(results.total_units, results.total_parcels)
             // Update stats using metadata
             if (results.metadata) {
                 this.updateStats(results.metadata);
@@ -67,11 +85,20 @@ class MapUpdater {
     }
     
     /**
-     * Get Leaflet style for a parcel based on its ring
+     * Update parcels - alias for updateWithResults for compatibility
+     */
+    updateParcels(geojson) {
+        return this.updateWithResults(geojson);
+    }
+    
+    /**
+     * Get Leaflet style for a parcel based on its ring or policy source
      */
     getParcelStyle(feature) {
-        const ring = feature.properties.ring;
-        const color = this.getColorForRing(ring);
+        let color;
+
+        const ring_density = feature.properties.ring_density;
+        color = this.getColorForRing(ring_density);
         
         return {
             fillColor: color,
@@ -117,11 +144,11 @@ class MapUpdater {
     /**
      * Get color for a parcel based on which ring it's in
      */
-    getColorForRing(ringNumber) {
-        switch(ringNumber) {
-            case 1: return this.colors.ring1;
-            case 2: return this.colors.ring2;
-            case 3: return this.colors.ring3;
+    getColorForRing(ringDensity) {
+        switch(ringDensity) {
+            case "high": return this.colors.ring_high;
+            case "med": return this.colors.ring_med;
+            case "low": return this.colors.ring_low;
             default: return '#999999';
         }
     }
@@ -153,6 +180,20 @@ class MapUpdater {
             headerText = `Parcel ${parcel.parcel_id}`;
         }
         
+        // Determine distance label based on policy source
+        let distanceLabel = 'Distance to Transit:';
+        let distanceValue = parcel.distance_to_light_rail;
+        
+        if (parcel.policy_source) {
+            if (parcel.policy_source.startsWith('POD')) {
+                distanceLabel = 'Distance to Park:';
+                distanceValue = parcel.distance || parcel.distance_to_regional_park || parcel.distance_to_community_park;
+            } else if (parcel.policy_source.startsWith('BOD')) {
+                distanceLabel = 'Distance to Bus:';
+                distanceValue = parcel.distance;
+            }
+        }
+        
         return `
             <div style="padding: 0; width: 350px;">
                 <!-- Red Header with Address -->
@@ -163,9 +204,9 @@ class MapUpdater {
                 <!-- Property Information -->
                 <div style="padding: 16px; background: white;">
                     <table style="width: 100%; font-size: 14px; color: #333; border-collapse: collapse;">
-                        <tr>
-                            <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666; width: 140px;">Opportunity:</td>
-                            <td style="padding: 4px 0; text-align: right;">${parcel.opportunity_type || 'TOD Opportunity'}</td>
+                        <tr style="border-top: 1px solid #e5e7eb;">
+                            <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Property Type:</td>
+                            <td style="padding: 4px 0; text-align: right; text-transform: capitalize;">${parcel.property_type || 'N/A'}</td>
                         </tr>
                         <tr>
                             <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Property Class:</td>
@@ -177,27 +218,23 @@ class MapUpdater {
                         </tr>
                         <tr>
                             <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Size:</td>
-                            <td style="padding: 4px 0; text-align: right;">${parcel.land_area_acres.toFixed(2)} acres (${formatNumber(Math.round(parcel.land_area_acres * 43560))} sq ft)</td>
-                        </tr>
-                        <tr style="border-top: 1px solid #e5e7eb;">
-                            <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Property Type:</td>
-                            <td style="padding: 4px 0; text-align: right;">${parcel.property_type || 'N/A'}</td>
+                            <td style="padding: 4px 0; text-align: right;">${(parcel.land_area_acres || 0).toFixed(2)} acres (${formatNumber(Math.round((parcel.land_area_acres || 0) * 43560))} sq ft)</td>
                         </tr>
                         <tr>
                             <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Owner Type:</td>
-                            <td style="padding: 4px 0; text-align: right;">${parcel.owner_type || 'N/A'}</td>
+                            <td style="padding: 4px 0; text-align: right; text-transform: capitalize;">${parcel.owner_type || 'N/A'}</td>
                         </tr>
                         <tr>
                             <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Owner:</td>
                             <td style="padding: 4px 0; text-align: right;">${parcel.owner_name || 'N/A'}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Current Units:</td>
-                            <td style="padding: 4px 0; text-align: right;">${formatNumber(parcel.current_units)}</td>
+                            <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Building Age:</td>
+                            <td style="padding: 4px 0; text-align: right;">${parcel.building_age || 'N/A'}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Res Above Grade:</td>
-                            <td style="padding: 4px 0; text-align: right;">${formatNumber(parcel.res_above_grade_area)} sq ft</td>
+                            <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Building SF:</td>
+                            <td style="padding: 4px 0; text-align: right;">${formatNumber(parcel.building_sqft) || 'N/A'}</td>
                         </tr>
                         <tr>
                             <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Building Value:</td>
@@ -208,8 +245,8 @@ class MapUpdater {
                             <td style="padding: 4px 0; text-align: right;">${formatCurrency(parcel.land_value)}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Total Building SF:</td>
-                            <td style="padding: 4px 0; text-align: right;">${formatNumber(parcel.building_sqft)}</td>
+                            <td style="padding: 4px 8px 4px 0; font-weight: 600; color: #666;">Current Units:</td>
+                            <td style="padding: 4px 0; text-align: right;">${formatNumber(parcel.current_units)}</td>
                         </tr>
                     </table>
                 </div>
@@ -220,6 +257,16 @@ class MapUpdater {
                         Development Potential
                     </div>
                     <table style="width: 100%; font-size: 14px; color: #333; border-collapse: collapse;">
+                        ${parcel.policy_source ? `
+                        <tr>
+                            <td style="padding: 3px 8px 3px 0; font-weight: 600; color: #666; width: 140px;">Policy:</td>
+                            <td style="padding: 3px 0; text-align: right; font-weight: 700;">${parcel.policy_source}</td>
+                        </tr>
+                        ` : ''}
+                        <tr>
+                            <td style="padding: 3px 8px 3px 0; font-weight: 600; color: #666; width: 140px;">Proposed Density:</td>
+                            <td style="padding: 3px 0; text-align: right; font-weight: 700; text-transform: capitalize;">${parcel.ring_density}</td>
+                        </tr>
                         <tr>
                             <td style="padding: 3px 8px 3px 0; font-weight: 600; color: #666; width: 140px;">Proposed Height:</td>
                             <td style="padding: 3px 0; text-align: right; font-weight: 700;">${parcel.assigned_height} stories</td>
@@ -228,16 +275,18 @@ class MapUpdater {
                             <td style="padding: 3px 8px 3px 0; font-weight: 600; color: #666;">Proposed Zone:</td>
                             <td style="padding: 3px 0; text-align: right; font-weight: 700;">${parcel.assigned_zone}</td>
                         </tr>
+                        ${distanceValue ? `
                         <tr>
-                            <td style="padding: 3px 8px 3px 0; font-weight: 600; color: #666;">Distance to Transit:</td>
-                            <td style="padding: 3px 0; text-align: right;">${Math.round(parcel.distance_to_light_rail)} ft</td>
+                            <td style="padding: 3px 8px 3px 0; font-weight: 600; color: #666;">${distanceLabel}</td>
+                            <td style="padding: 3px 0; text-align: right;">${Math.round(distanceValue)} ft</td>
                         </tr>
+                        ` : ''}
                     </table>
                     
                     <!-- Highlighted Units -->
-                    <div style="background: white; border: 2px solid #3B82F6; border-radius: 6px; padding: 12px; margin-top: 10px; text-align: center;">
-                        <div style="color: #3B82F6; font-size: 24px; font-weight: 900;">
-                            ~${formatNumber(parcel.potential_units)} units
+                    <div style="background: white; border: 2px solid #3B82F6; border-radius: 6px; padding: 10px; margin-top: 10px; text-align: center;">
+                        <div style="color: #3B82F6; font-size: 20px; font-weight: 900;">
+                            ~${formatNumber(parcel.potential_units)} potential units
                         </div>
                     </div>
                 </div>
