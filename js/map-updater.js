@@ -59,13 +59,12 @@ class MapUpdater {
                         });
                     });
                     
-                    //Mouseout is not need as far as I can tel
-                    /*layer.on('mouseout', function() {
+                    layer.on('mouseout', function() {
                         this.setStyle({
-                            weight: 2,
+                            weight: 1,
                             opacity: 0.8
                         });
-                    });*/
+                    });
                 }
             }).addTo(this.map);
             
@@ -102,7 +101,7 @@ class MapUpdater {
         
         return {
             fillColor: color,
-            weight: 2,
+            weight: 1,
             opacity: 0.8,
             color: 'white', /* outline color of parcel box */
             fillOpacity: 0.6
