@@ -268,22 +268,22 @@ class ConfigPanel {
         const formatNumber = (num) => num.toLocaleString();
         
         // Total results
-        this.resultDisplays.totalParcels.textContent = formatNumber(results.total_parcels);
-        this.resultDisplays.totalUnits.textContent = formatNumber(results.total_units);
+        this.resultDisplays.totalParcels.textContent = formatNumber(results.summary.total_parcels);
+        this.resultDisplays.totalUnits.textContent = formatNumber(results.summary.total_units);
         
         // Per-policy results
-        if (results.by_policy) {
-            if (results.by_policy.TOD) {
-                this.resultDisplays.todParcels.textContent = formatNumber(results.by_policy.TOD.parcels);
-                this.resultDisplays.todUnits.textContent = formatNumber(results.by_policy.TOD.units);
+        if (results.summary.by_policy) {
+            if (results.summary.by_policy.TOD) {
+                this.resultDisplays.todParcels.textContent = formatNumber(results.summary.by_policy.TOD.parcels);
+                this.resultDisplays.todUnits.textContent = formatNumber(results.summary.by_policy.TOD.units);
             } else {
                 this.resultDisplays.todParcels.textContent = '--';
                 this.resultDisplays.todUnits.textContent = '--';
             }
             
-            if (results.by_policy.POD) {
-                this.resultDisplays.podParcels.textContent = formatNumber(results.by_policy.POD.parcels);
-                this.resultDisplays.podUnits.textContent = formatNumber(results.by_policy.POD.units);
+            if (results.summary.by_policy.POD) {
+                this.resultDisplays.podParcels.textContent = formatNumber(results.summary.by_policy.POD.parcels);
+                this.resultDisplays.podUnits.textContent = formatNumber(results.summary.by_policy.POD.units);
             } else {
                 this.resultDisplays.podParcels.textContent = '--';
                 this.resultDisplays.podUnits.textContent = '--';

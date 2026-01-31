@@ -525,11 +525,57 @@ async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get
 
     # Construct Final Response
     features = list(global_registry.values())
-    total_units = sum(f['properties']['potential_units'] for f in features)
+
+    # --- 2) Aggregate Statistics ---
+    features = list(global_registry.values())
+    total_units = 0
+    
+    policy_stats = {}
+    tier_stats = {
+        "high": {"parcels": 0, "units": 0},
+        "med": {"parcels": 0, "units": 0},
+        "low": {"parcels": 0, "units": 0}
+    }
+
+    for f in features:
+        p = f['properties']
+        units = p['potential_units']
+        height = p['assigned_height']
+        source = p['policy_source']
+        
+        total_units += units
+
+        # Determine the parent group (e.g., POD-Regional -> POD)
+        group = "POD" if "POD-" in source else source
+        
+        # Track both the specific source and the roll-up group
+        for key in [source, group]:
+            if key not in policy_stats:
+                policy_stats[key] = {"parcels": 0, "units": 0}
+            policy_stats[key]["parcels"] += 1
+            policy_stats[key]["units"] += units
+
+
+        # the following is wrong. we need to calculate 
+        # height based on the passed in params - not hard code to 8 and 5
+        # B) Tier Breakdown
+        if height >= 8:
+            tier = "high"
+        elif height >= 5:
+            tier = "med"
+        else:
+            tier = "low"
+            
+        tier_stats[tier]["parcels"] += 1
+        tier_stats[tier]["units"] += units
 
     return {
-        "total_units": total_units,
-        "total_parcels": len(features),
+        "summary": {
+            "total_units": total_units,
+            "total_parcels": len(features),
+            "by_policy": policy_stats,
+            "by_density": tier_stats
+        },
         "geojson": {
             "type": "FeatureCollection",
             "features": features
