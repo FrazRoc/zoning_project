@@ -96,8 +96,8 @@ def evaluate_spatial_policy(
     rings: List[RingConfig], 
     distance_column: str, 
     global_registry: Dict[str, Any],
-    min_il_ratio: float = 1.5,
-    exclude_unlikely: bool = True
+    exclude_unlikely: bool = True,
+    min_il_ratio: float = 1.5
 ):
     if not rings:
         return
@@ -119,7 +119,7 @@ def evaluate_spatial_policy(
             improvement_value IS NULL 
             OR land_value IS NULL 
             OR land_value = 0 
-            OR (improvement_value / NULLIF(land_value, 0)) < 1.5
+            OR (improvement_value / NULLIF(land_value, 0)) < :min_il_ratio
         )
         """
 
@@ -134,7 +134,6 @@ def evaluate_spatial_policy(
             current_units, opportunity_type, {distance_column}
         FROM parcels
         WHERE {distance_column} <= :max_dist
-        AND (improvement_value / NULLIF(land_value, 0)) < :il_ratio
         AND zone_district NOT LIKE 'CMP%'
         AND zone_district NOT LIKE 'H-%'
         AND zone_district NOT LIKE 'CPV%'
@@ -147,13 +146,13 @@ def evaluate_spatial_policy(
         {unlikely_clause}
     """)
     
-    result = db.execute(query, {"max_dist": max_dist, "il_ratio": min_il_ratio})
+    result = db.execute(query, {"max_dist": max_dist, "min_il_ratio": min_il_ratio})
     
     for parcel in result.mappings():
         geom = json.loads(parcel['geometry_geojson'])
         
         # Compactness Filter (Filter out roads/rails)
-        if calculate_polsby_popper(geom) < 0.4:
+        if calculate_polsby_popper(geom) < 0.3:
             continue
 
         # Find the best applicable ring
@@ -506,22 +505,22 @@ async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get
     # --- 1) Evaluate Transit (TOD) ---
     if config.tod.enabled:
         evaluate_spatial_policy(
-            db, "TOD", config.tod.rings, "distance_to_light_rail", global_registry
+            db, "TOD", config.tod.rings, "distance_to_light_rail", global_registry, config.exclude_unlikely
         )
 
     # --- 2) Evaluate Parks (POD) ---
     if config.pod.enabled:
         evaluate_spatial_policy(
-            db, "POD-Regional", config.pod.regional_parks, "distance_to_regional_park", global_registry
+            db, "POD-Regional", config.pod.regional_parks, "distance_to_regional_park", global_registry, config.exclude_unlikely
         )
         evaluate_spatial_policy(
-            db, "POD-Community", config.pod.community_parks, "distance_to_community_park", global_registry
+            db, "POD-Community", config.pod.community_parks, "distance_to_community_park", global_registry, config.exclude_unlikely
         )
 
     # --- 3) Evaluate Bus (BOD) ---
     if config.bod and config.bod.enabled:
         evaluate_spatial_policy(
-            db, "BOD", config.bod.rings, "distance_to_brt", global_registry
+            db, "BOD", config.bod.rings, "distance_to_brt", global_registry, config.exclude_unlikely
         )
 
     # Construct Final Response
