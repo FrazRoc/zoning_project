@@ -184,7 +184,10 @@ class ConfigPanel {
                     e.stopPropagation();
                     const policy = e.target.dataset.policy;
                     this.policyToggles[policy].checked = false;
+                    //EF: we should turn off lines, stations and parks instantly here, 
+                    // rather than wait for API return call
                     this.updatePolicyState(policy, false);
+                    this.apply();
                 });
             });
         }
@@ -221,6 +224,11 @@ class ConfigPanel {
                 ],
             };
         }
+        else {
+            config.tod = {
+                enabled: false
+            }
+        }
         
         // POD config
         if (this.policyToggles.pod.checked) {
@@ -250,6 +258,11 @@ class ConfigPanel {
                 ]
             };
         }
+        else {
+            config.pod = {
+                enabled: false
+            }
+        }
         
         // BOD config (placeholder for future)
         if (this.policyToggles.bod.checked) {
@@ -264,7 +277,6 @@ class ConfigPanel {
     }
 
     updateResults(results) {
-        console.log("trying to update results ", results)
         const formatNumber = (num) => num.toLocaleString();
         
         // Total results
@@ -295,6 +307,7 @@ class ConfigPanel {
         this.applyBtn.classList.add('loading');
         this.applyBtn.textContent = 'Loading...';
         this.applyBtn.disabled = true;
+        //add an overlay to the map during Loading?
     }
 
     hideLoading() {
@@ -318,14 +331,39 @@ class ConfigPanel {
             
             // Update map (if map updater exists)
             if (window.mapUpdater) {
-                console.log("map updater exists, calling updateParcels")
                 window.mapUpdater.updateParcels(results.geojson);
             }
 
-            // Update park buffer (if park renderer exists)
+            // Update rail features and buffers based on TOD toggle
+            if (window.transitRenderer) {
+                if (this.policyToggles.tod.checked) {
+                    console.log("TOD enabled, showing rails and updating buffers");
+                    window.transitRenderer.showLines();
+                    window.transitRenderer.showStations();
+                    //Evan: we might want to change this to take the largest distance of the 3 rings
+                    window.transitRenderer.updateBufferRings(this.todSliders.ring3Distance.value);
+                } else {
+                    console.log("TOD disabled, hiding rails and clearing buffers");
+                    window.transitRenderer.hideLines();
+                    window.transitRenderer.hideStations();
+                    window.transitRenderer.clearBuffers();
+                }
+            }
+
+            // Update park features and buffers based on POD toggle
             if (window.parkRenderer) {
-                console.log("parkRenderer exists, calling updateBuffers")
-                window.parkRenderer.updateBuffers(this.podSliders.regionalOuterDistance.value, this.podSliders.communityDistance.value);
+                if (this.policyToggles.pod.checked) {
+                    console.log("POD enabled, showing parks and updating buffers");
+                    window.parkRenderer.showParks();
+                    window.parkRenderer.updateBuffers(
+                        this.podSliders.regionalOuterDistance.value, 
+                        this.podSliders.communityDistance.value
+                    );
+                } else {
+                    console.log("POD disabled, hiding parks and clearing buffers");
+                    window.parkRenderer.hideParks();
+                    window.parkRenderer.clearBuffers();
+                }
             }
 
             

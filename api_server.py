@@ -354,7 +354,7 @@ def get_max_stories_from_zone(zone_district: str) -> float:
     
     # Industrial zones - typically 3-5 stories
     if zone.startswith('I-'):
-        return 5
+        return 3
     
     # Special districts - assume permissive
     if zone.startswith('PUD') or zone.startswith('GDP'):

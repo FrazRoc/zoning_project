@@ -74,6 +74,37 @@ class ParkRenderer {
             console.error('Error updating park buffers:', error);
         }
     }
+
+    /**
+     * Clear park buffer rings from the map
+     */
+    clearBuffers() {
+        if (this.bufferRingsLayer) {
+            this.map.removeLayer(this.bufferRingsLayer);
+            this.bufferRingsLayer = null;
+            console.log('✓ Park buffers cleared');
+        }
+    }
+
+    /**
+     * Show park polygons on the map
+     */
+    showParks() {
+        if (this.parksLayer && !this.map.hasLayer(this.parksLayer)) {
+            this.map.addLayer(this.parksLayer);
+            console.log('✓ Parks shown');
+        }
+    }
+
+    /**
+     * Hide park polygons from the map
+     */
+    hideParks() {
+        if (this.parksLayer && this.map.hasLayer(this.parksLayer)) {
+            this.map.removeLayer(this.parksLayer);
+            console.log('✓ Parks hidden');
+        }
+    }
 }
 
 window.ParkRenderer = ParkRenderer;

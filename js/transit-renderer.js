@@ -33,10 +33,7 @@ class TransitRenderer {
         try {
             const lines = await window.api.getRailLines();
             
-            // Remove existing layer if present
-            if (this.railLinesLayer) {
-                this.map.removeLayer(this.railLinesLayer);
-            }
+            this.hideLines();
             
             // Convert to GeoJSON features
             const geojsonFeatures = lines.map(line => ({
@@ -91,9 +88,7 @@ class TransitRenderer {
             this.stations = stations;
             
             // Remove existing layer if present
-            if (this.stationsLayer) {
-                this.map.removeLayer(this.stationsLayer);
-            }
+            this.hideStations();
             
             // Create station markers
             const markers = stations.map(station => {
@@ -137,9 +132,7 @@ class TransitRenderer {
     loadBufferRings(stations, distanceFeet = 1500) {
         try {
             // Remove existing buffer layer
-            if (this.bufferRingsLayer) {
-                this.map.removeLayer(this.bufferRingsLayer);
-            }
+            this.clearBuffers();
             
             // Create buffers around each station
             const buffers = stations.map(station => {
@@ -194,6 +187,57 @@ class TransitRenderer {
         
         return { linesCount, stationsCount };
     }
+
+     /**
+     * Clear rail buffer rings from the map
+     */
+    clearBuffers() {
+        // Remove existing buffer layer
+        if (this.bufferRingsLayer) {
+            this.map.removeLayer(this.bufferRingsLayer);
+            console.log('✓ Rail buffers cleared');
+        } 
+    }
+
+    /**
+     * Hide Rail lines from the map
+     */
+    hideLines() {
+        // Remove existing buffer layer
+        if (this.railLinesLayer) {
+            this.map.removeLayer(this.railLinesLayer);
+        }
+    }
+    /**
+     * Hide Rail statios from the map
+     */
+    hideStations() {
+        // Remove existing buffer layer
+        if (this.stationsLayer) {
+            this.map.removeLayer(this.stationsLayer);
+        }
+    }
+
+    /**
+     * Show lines circles on the map
+     */
+    showLines() {
+        if (this.railLinesLayer && !this.map.hasLayer(this.railLinesLayer)) {
+            this.map.addLayer(this.railLinesLayer);
+            console.log('✓ Rail Linesshown');
+        }
+    }
+
+    /**
+     * Show stations circles on the map
+     */
+    showStations() {
+        if (this.stationsLayer && !this.map.hasLayer(this.stationsLayer)) {
+            this.map.addLayer(this.stationsLayer);
+            console.log('✓ Rail stations shown');
+        }
+    }
+
 }
 
 // Make globally available
