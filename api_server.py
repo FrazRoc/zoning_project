@@ -282,11 +282,23 @@ def get_max_stories_from_zone(zone_district: str) -> float:
     """
     Determine maximum allowed stories from current zone district.
     Returns the max stories allowed by the current zoning.
+    Handles modern Denver Zoning Code and Chapter 59 (Old Code) special cases.
     """
     if not zone_district:
         return 0
     
     zone = zone_district.upper()
+
+    # --- CHAPTER 59 / CENTRAL PARK SPECIAL CASES ---
+    # R-MU-20 (55') -> ~5 stories
+    if 'R-MU-20' in zone:
+        return 5.0
+    # R-MU-30 (140') -> ~12 stories
+    if 'R-MU-30' in zone:
+        return 12.0
+    # C-MU zones (FAR 1.0) -> ~2.5 stories (conservative estimate for FAR 1.0)
+    if 'C-MU-20' in zone or 'C-MU-30'in zone:
+        return 2.5
     
     # Downtown zones - very permissive (12-30 stories typically)
     if zone.startswith('D-'):
