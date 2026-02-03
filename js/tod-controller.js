@@ -38,9 +38,6 @@ class TODController {
             await window.api.healthCheck();
             console.log('✓ API connection successful');
             
-            // Load initial data
-            //Evan commented this out
-            //await this.evaluate(this.config);
             
         } catch (error) {
             console.error('Failed to initialize:', error);
@@ -48,53 +45,6 @@ class TODController {
         }
     }
 
-    /**
-     * Evaluate TOD policy with given configuration
-     * @param {Object} config - Policy configuration
-     */
-    async evaluate(config) {
-        console.log('Evaluating TOD policy with config:', config);
-        
-        try {
-            // Update current config
-            this.config = config;
-
-            // Update buffer rings to match Ring 3 distance
-            if (this.transitRenderer && config.rings && config.rings.length >= 3) {
-                const ring3Distance = config.rings[2].distance; // Ring 3 is index 2
-                this.transitRenderer.updateBufferRings(ring3Distance);
-            }
-            
-            // Call API
-            const results = await window.api.evaluateTOD(config);
-            
-            // Store results
-            this.currentResults = results;
-            
-            // Update UI components
-            this.updateUI(results);
-            
-            return results;
-            
-        } catch (error) {
-            console.error('Evaluation failed:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Update all UI components with results
-     */
-    updateUI(results) {
-        // Update map with GeoJSON
-        this.mapUpdater.updateWithResults(results);
-        
-        // Update config panel results (if it exists)
-        // Extract metadata for config panel
-        if (window.configPanel && results.metadata) {
-            window.configPanel.updateResults(results.metadata);
-        }
-    }
 
     /**
      * Show error message to user
@@ -132,20 +82,6 @@ class TODController {
         setTimeout(() => {
             errorDiv.remove();
         }, 8000);
-    }
-
-    /**
-     * Get current results
-     */
-    getResults() {
-        return this.currentResults;
-    }
-
-    /**
-     * Get current configuration
-     */
-    getConfig() {
-        return this.config;
     }
 }
 

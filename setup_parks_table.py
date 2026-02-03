@@ -101,6 +101,39 @@ def load_data(geojson_file):
         conn.commit()
         print(f"Successfully loaded {len(features)} records into parks table")
 
+
+def add_park_hill():
+    """Insert the Park Hill Golf Course into the parks table using its parcel data"""
+    print("Adding Park Hill Golf Course as a Regional Park...")
+    
+    with engine.connect() as conn:
+        # We pull the specific parcel and map it to our parks schema
+        # Note: 'ballot_park_type' is hardcoded as 'regional' because it's ~155 acres
+        insert_query = text("""
+            INSERT INTO parks (
+                name, formal_name, park_type, park_class, ballot_park_type,
+                land_area_acres, address_line1, city, state, geometry
+            )
+            SELECT 
+                'Park Hill Park' as name,
+                'Park Hill Park' as formal_name,
+                'Public Park' as park_type,
+                'regional' as park_class,
+                'regional' as ballot_park_type,
+                land_area_acres,
+                address as address_line1,
+                'Denver' as city,
+                'CO' as state,
+                geometry_geojson as geometry
+            FROM parcels 
+            WHERE address = '4141 E 35TH AVE'
+            ON CONFLICT DO NOTHING;
+        """)
+        
+        result = conn.execute(insert_query)
+        conn.commit()
+        print(f"Successfully added Park Hill Golf Course to parks table.")
+
 def verify_data():
     """Verify the data was loaded correctly"""
     with engine.connect() as conn:
@@ -122,8 +155,12 @@ if __name__ == "__main__":
     
     print("\nLoading data from GeoJSON file...")
     load_data(geojson_file)
+
+    print("Add Park Hill Park manually, by pulling parcel data")
+    add_park_hill()
     
     print("\nVerifying data...")
     verify_data()
+
     
     print("\n✓ Complete!")

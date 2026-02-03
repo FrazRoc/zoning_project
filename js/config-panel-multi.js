@@ -276,7 +276,7 @@ class ConfigPanel {
         return config;
     }
 
-    updateResults(results) {
+    updatePanelStats(results) {
         const formatNumber = (num) => num.toLocaleString();
         
         // Total results
@@ -318,6 +318,38 @@ class ConfigPanel {
 
     async apply() {
         this.showLoading();
+
+        // Update rail features and buffers based on TOD toggle
+        if (window.transitRenderer) {
+            if (this.policyToggles.tod.checked) {
+                console.log("TOD enabled, showing rails and updating buffers");
+                window.transitRenderer.showLines();
+                window.transitRenderer.showStations();
+                //Evan: we might want to change this to take the largest distance of the 3 rings
+                window.transitRenderer.updateBufferRings(this.todSliders.ring3Distance.value);
+            } else {
+                console.log("TOD disabled, hiding rails and clearing buffers");
+                window.transitRenderer.hideLines();
+                window.transitRenderer.hideStations();
+                window.transitRenderer.clearBuffers();
+            }
+        }
+
+        // Update park features and buffers based on POD toggle
+        if (window.parkRenderer) {
+            if (this.policyToggles.pod.checked) {
+                console.log("POD enabled, showing parks and updating buffers");
+                window.parkRenderer.showParks();
+                window.parkRenderer.updateBuffers(
+                    this.podSliders.regionalOuterDistance.value, 
+                    this.podSliders.communityDistance.value
+                );
+            } else {
+                console.log("POD disabled, hiding parks and clearing buffers");
+                window.parkRenderer.hideParks();
+                window.parkRenderer.clearBuffers();
+            }
+        }
         
         try {
             const config = this.getConfig();
@@ -326,46 +358,20 @@ class ConfigPanel {
             // Call multi-policy API
             const results = await window.api.evaluatePolicies(config);
             
-            // Update results display
-            this.updateResults(results);
+            // Update Config Panel results display
+            this.updatePanelStats(results);
+
+            console.log("results.summary", results.summary)
+            console.log(results.summary.total_units, results.summary.total_parcels)
+            // Update stats using metadata
+            if (window.mapUpdater && results.summary) {
+                window.mapUpdater.updateTitleStats(results);
+            }
             
             // Update map (if map updater exists)
             if (window.mapUpdater) {
                 window.mapUpdater.updateParcels(results.geojson);
             }
-
-            // Update rail features and buffers based on TOD toggle
-            if (window.transitRenderer) {
-                if (this.policyToggles.tod.checked) {
-                    console.log("TOD enabled, showing rails and updating buffers");
-                    window.transitRenderer.showLines();
-                    window.transitRenderer.showStations();
-                    //Evan: we might want to change this to take the largest distance of the 3 rings
-                    window.transitRenderer.updateBufferRings(this.todSliders.ring3Distance.value);
-                } else {
-                    console.log("TOD disabled, hiding rails and clearing buffers");
-                    window.transitRenderer.hideLines();
-                    window.transitRenderer.hideStations();
-                    window.transitRenderer.clearBuffers();
-                }
-            }
-
-            // Update park features and buffers based on POD toggle
-            if (window.parkRenderer) {
-                if (this.policyToggles.pod.checked) {
-                    console.log("POD enabled, showing parks and updating buffers");
-                    window.parkRenderer.showParks();
-                    window.parkRenderer.updateBuffers(
-                        this.podSliders.regionalOuterDistance.value, 
-                        this.podSliders.communityDistance.value
-                    );
-                } else {
-                    console.log("POD disabled, hiding parks and clearing buffers");
-                    window.parkRenderer.hideParks();
-                    window.parkRenderer.clearBuffers();
-                }
-            }
-
             
         } catch (error) {
             console.error('Failed to apply configuration:', error);

@@ -67,15 +67,7 @@ class MapUpdater {
                     });
                 }
             }).addTo(this.map);
-            
             console.log(`Added ${results.features.length} parcels to map`);
-            console.log(results)
-            console.log(results.total_units, results.total_parcels)
-            // Update stats using metadata
-            if (results.metadata) {
-                this.updateStats(results.metadata);
-                this.updateLegend(results.metadata);
-            }
         } else {
             console.warn('No GeoJSON features in results');
         }
@@ -111,19 +103,18 @@ class MapUpdater {
     /**
      * Update stats display in title card
      */
-    updateStats(results) {
-        const formatNumber = (num) => {
-            if (num >= 1000) {
-                return `~${Math.round(num / 1000)}K`;
-            }
-            return num.toLocaleString();
-        };
-        
-        document.getElementById('stat-parcels').textContent = 
-            results.total_parcels.toLocaleString();
-        
-        document.getElementById('stat-units').textContent = 
-            formatNumber(results.total_units);
+    updateTitleStats(results) {
+        const unitsEl = document.getElementById('stat-total-units');
+        const parcelsEl = document.getElementById('stat-total-parcels');
+
+        // Helper to format 106531 -> 106,531
+        const format = (val) => Number(val || 0).toLocaleString();
+
+        console.log("updateTitleStats", unitsEl,parcelsEl);
+        console.log(results)
+        //,format(results.summary.total_units), format(results.summary.total_parcels) )
+        if (unitsEl) unitsEl.textContent = format(results.summary.total_units);
+        if (parcelsEl) parcelsEl.textContent = format(results.summary.total_parcels);
     }
 
     /**

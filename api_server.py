@@ -299,6 +299,34 @@ def get_max_stories_from_zone(zone_district: str) -> float:
     # C-MU zones (FAR 1.0) -> ~2.5 stories (conservative estimate for FAR 1.0)
     if 'C-MU-20' in zone or 'C-MU-30'in zone:
         return 2.5
+
+    # --- CHAPTER 59 RESIDENTIAL OVERRIDES ---
+    # R-2-A is a high-density legacy zone (110 feet)
+    if 'R-2-A' in zone:
+        return 10.0
+        
+    # R-0, R-1, R-2 are standard low-density (30-35 feet)
+    # We use 2.5 to represent the typical 2-story + attic house
+    if any(r_zone in zone for r_zone in ['R-0', 'R-1', 'R-2']) and 'R-2-A' not in zone and 'R-2-B' not in zone:
+        return 2.5
+        
+    # R-2-B is slightly more permissive than R-2 but still low-rise
+    if 'R-2-B' in zone:
+        return 3.0
+
+    # --- CHAPTER 59 "B" ZONES (Business Districts) ---
+    # B-1, B-2, B-3 are 1.0 FAR -> ~2.5 stories
+    if any(b_zone in zone for b_zone in ['B-1', 'B-2', 'B-3']):
+        # Note: B-1 can be 2.0 FAR on >1 acre lots, but 2.5 is the safe baseline
+        return 2.5
+        
+    # B-4 is 2.0 FAR -> ~5 stories
+    if 'B-4' in zone:
+        return 5.0
+
+    # B-A zones (Business Agricultural) are very low density
+    if 'B-A' in zone:
+        return 2.5
     
     # Downtown zones - very permissive (12-30 stories typically)
     if zone.startswith('D-'):
