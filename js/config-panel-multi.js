@@ -122,7 +122,7 @@ class ConfigPanel {
         
         // Action buttons
         this.applyBtn.addEventListener('click', () => this.apply());
-        this.resetBtn.addEventListener('click', () => this.reset());
+        this.resetBtn.addEventListener('click', () => {this.reset(); this.apply();});
         
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -353,7 +353,6 @@ class ConfigPanel {
         
         try {
             const config = this.getConfig();
-            console.log('Applying config:', config);
             
             // Call multi-policy API
             const results = await window.api.evaluatePolicies(config);
@@ -361,9 +360,7 @@ class ConfigPanel {
             // Update Config Panel results display
             this.updatePanelStats(results);
 
-            console.log("results.summary", results.summary)
-            console.log(results.summary.total_units, results.summary.total_parcels)
-            // Update stats using metadata
+            // Update Title Stats using metadata summary
             if (window.mapUpdater && results.summary) {
                 window.mapUpdater.updateTitleStats(results);
             }
@@ -417,13 +414,5 @@ class ConfigPanel {
         this.updatePolicyState('tod', true);
         this.updatePolicyState('pod', true);
         this.updatePolicyState('bod', false);
-        
-        // Apply the reset configuration
-        this.apply();
     }
 }
-
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    window.configPanel = new ConfigPanel();
-});

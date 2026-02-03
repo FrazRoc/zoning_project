@@ -113,7 +113,7 @@ class TransitRenderer {
             
             this.stationsLayer = L.layerGroup(markers).addTo(this.map);
             
-            // Also load buffer rings
+            // Also load buffer rings around stations
             this.loadBufferRings(stations);
             
             console.log('✓ RTD stations loaded:', stations.length);
@@ -160,9 +160,9 @@ class TransitRenderer {
                 pane: 'tilePane'  // Behind everything else
             }).addTo(this.map);
             
-            console.log(`✓ Buffer rings created: ${distanceFeet}ft radius`);
+            console.log(`✓ TOD Buffer rings created: ${distanceFeet}ft radius`);
         } catch (error) {
-            console.log('Buffer rings not created:', error);
+            console.log('TOD Buffer rings not created:', error);
         }
     }
 
@@ -195,7 +195,7 @@ class TransitRenderer {
         // Remove existing buffer layer
         if (this.bufferRingsLayer) {
             this.map.removeLayer(this.bufferRingsLayer);
-            console.log('✓ Rail buffers cleared');
+            console.log('✓ TOD buffers cleared');
         } 
     }
 
@@ -224,7 +224,7 @@ class TransitRenderer {
     showLines() {
         if (this.railLinesLayer && !this.map.hasLayer(this.railLinesLayer)) {
             this.map.addLayer(this.railLinesLayer);
-            console.log('✓ Rail Linesshown');
+            console.log('✓ Rail Lines shown');
         }
     }
 

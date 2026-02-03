@@ -31,15 +31,26 @@ class ParkRenderer {
             }).addTo(this.map);
 
             console.log(`✓ ${this.parksFeatures.length} Parks loaded`);
+
+            // Also load buffer rings around parks
+            this.updateBuffers();
+
+            return this.parksFeatures;
         } catch (error) {
             console.error('Parks failed to load:', error);
+            return [];
         }
     }
 
     /**
      * Generates a single outer buffer for Regional and Community parks
      */
-    updateBuffers(regionalDist, communityDist) {
+    updateBuffers(regionalDist=750, communityDist=250) {
+        
+        if (!this.parksFeatures || this.parksFeatures.length === 0) {
+            console.warn("⚠️ Park buffers requested but parksFeatures is empty. Data likely still loading.");
+            return;
+        }
         try {
            console.time('⚡ Park Buffer (Fast)');
             

@@ -24,22 +24,6 @@ class MileHighAPI {
     }
 
     /**
-     * Get database statistics
-     */
-    async getStats() {
-        try {
-            const response = await fetch(`${this.baseURL}/api/stats`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Failed to get stats:', error);
-            throw error;
-        }
-    }
-
-    /**
      * Evaluate multiple policies (TOD, POD, BOD) with custom configuration
      * @param {Object} config - Multi-policy configuration
      * @param {Object} config.tod - TOD policy config (optional)

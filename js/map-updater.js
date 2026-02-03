@@ -32,8 +32,6 @@ class MapUpdater {
      * @param {Object} results - GeoJSON FeatureCollection from API
      */
     async updateWithResults(results) {
-        console.log('Updating map with results:', results);
-        
         // Clear existing parcel layer
         if (this.parcelLayer) {
             this.map.removeLayer(this.parcelLayer);
@@ -110,8 +108,6 @@ class MapUpdater {
         // Helper to format 106531 -> 106,531
         const format = (val) => Number(val || 0).toLocaleString();
 
-        console.log("updateTitleStats", unitsEl,parcelsEl);
-        console.log(results)
         //,format(results.summary.total_units), format(results.summary.total_parcels) )
         if (unitsEl) unitsEl.textContent = format(results.summary.total_units);
         if (parcelsEl) parcelsEl.textContent = format(results.summary.total_parcels);
@@ -147,9 +143,6 @@ class MapUpdater {
      * Create popup content for a parcel
      */
     createPopupContent(parcel) {
-        // Log parcel data for debugging
-        //console.log('Popup parcel data:', parcel);
-        
         // Format currency
         const formatCurrency = (val) => {
             if (!val || val === 0) return '$0';

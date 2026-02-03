@@ -366,7 +366,6 @@
     <script src="js/api-client.js"></script>
     <script src="js/transit-renderer.js"></script>
     <script src="js/park-renderer.js"></script>
-    <script src="js/tod-controller.js"></script>
     <script src="js/map-updater.js"></script>
     <script src="js/config-panel-multi.js"></script>
     
@@ -375,7 +374,7 @@
         // Initialize map - make it globally accessible
         map = L.map('map', {
             center: [39.7392, -104.9903],
-            zoom: 12,
+            zoom: 13,
             zoomControl: true
         });
         
@@ -473,51 +472,45 @@
                 console.log('✓ Denver zoning layer loaded');
             })
             .catch(error => console.log('Zoning layer not found (optional):', error));
-        
-        // Initialize transit renderer and load stations/rail lines
+
+
+        // Create instances (Synchronous)
         const transitRenderer = new TransitRenderer(map);
-        window.transitRenderer = transitRenderer; // Make globally available
-        transitRenderer.loadAll().then(result => {
-            console.log(`Transit loaded: ${result.linesCount} line segments, ${result.stationsCount} stations`);
-        });
+        window.transitRenderer = transitRenderer;
 
-        // Initialize transit renderer and load stations/rail lines
         const parkRenderer = new ParkRenderer(map);
-        window.parkRenderer = parkRenderer; // Make globally available
-        parkRenderer.loadParks().then(result => {
-            console.log('i hope we made it this far');
-        });
+        window.parkRenderer = parkRenderer;
 
-/*        // Function to get current POD values and update map
-        const syncParkBuffers = () => {
-            // We use the "Outer Ring" distance for the main visual buffer
-            const regDist = parseInt(document.getElementById('pod-regional-outer-distance').value);
-            const commDist = parseInt(document.getElementById('pod-community-distance').value);
-            parkRenderer.updateBuffers(regDist, commDist);
-        };
-
-        // Listen to Regional Outer Distance Slider
-        document.getElementById('pod-regional-outer-distance').addEventListener('input', (e) => {
-            document.getElementById('pod-regional-outer-distance-value').textContent = e.target.value;
-            syncParkBuffers();
-        });
-
-        // Listen to Community Distance Slider
-        document.getElementById('pod-community-distance').addEventListener('input', (e) => {
-            document.getElementById('pod-community-distance-value').textContent = e.target.value;
-            syncParkBuffers();
-        });*/
-
-        //Evan testing this...
-        // Initialize mapUpdater
         const mapUpdater = new MapUpdater(map);
-        window.mapUpdater = mapUpdater; // Make globally available
-        
-        // Initialize application
-        window.addEventListener('DOMContentLoaded', () => {
-            console.log('Mile High Potential - Interactive Map Loaded');
-            // App initialization will be handled by config-panel.js
-        });
+        window.mapUpdater = mapUpdater;
+
+        // Coordinated Initialization (Asynchronous)
+        async function initializeApp() {
+            console.log('🚀 Starting Mile High Potential initialization...');
+            
+            try {
+                // Load all geometry data in parallel
+                // This ensures both transit and parks are ready before we proceed
+                const [transitResult, parkResult] = await Promise.all([
+                    transitRenderer.loadAll(),
+                    parkRenderer.loadParks()
+                ]);
+
+                window.configPanel = new ConfigPanel();
+                
+                console.log('✓ Transit and Parks data loaded into memory');
+                // 3. TRIGGER THE FIRST LOAD MANUALLY
+                // Now that data is ready, we call applyConfig() once to draw the initial state
+                console.log('Calculating initial policy results...');
+                await window.configPanel.apply();
+
+            } catch (error) {
+                console.error('❌ Initialization failed:', error);
+            }
+        }
+
+        // Trigger the init
+        initializeApp();
     </script>
 </body>
 </html>
