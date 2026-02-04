@@ -39,9 +39,15 @@ class MapUpdater {
         
         // Check if we have GeoJSON features
         if (results.type === 'FeatureCollection' && results.features) {
-            // Add parcels to map
+            // Add parcels to map with animation
             this.parcelLayer = L.geoJSON(results, {
-                style: (feature) => this.getParcelStyle(feature),
+                style: (feature) => {
+                    const style = this.getParcelStyle(feature);
+                    // Start with 0 opacity for animation
+                    style.fillOpacity = 0;
+                    style.opacity = 0;
+                    return style;
+                },
                 onEachFeature: (feature, layer) => {
                     // Add popup
                     layer.bindPopup(this.createPopupContent(feature.properties), {
@@ -65,6 +71,18 @@ class MapUpdater {
                     });
                 }
             }).addTo(this.map);
+            
+            // Animate parcels fading in
+            setTimeout(() => {
+                this.parcelLayer.eachLayer((layer) => {
+                    const style = this.getParcelStyle(layer.feature);
+                    layer.setStyle({
+                        fillOpacity: style.fillOpacity || 0.6,
+                        opacity: style.opacity || 0.8
+                    });
+                });
+            }, 50);
+            
             console.log(`Added ${results.features.length} parcels to map`);
         } else {
             console.warn('No GeoJSON features in results');
@@ -94,7 +112,9 @@ class MapUpdater {
             weight: 1,
             opacity: 0.8,
             color: 'white', /* outline color of parcel box */
-            fillOpacity: 0.6
+            fillOpacity: 0.6,
+            // Add smooth transition for animation
+            className: 'parcel-animated'
         };
     }
 

@@ -71,7 +71,7 @@ body {
     top: 12px;
     left: 12px;
     z-index: 1000;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #2563eb; /* Solid blue instead of gradient */
     color: white;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -109,7 +109,7 @@ body {
     top: 12px;
     right: 12px;
     z-index: 1000;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #2563eb; /* Solid blue instead of gradient */
     color: white;
     border: none;
     border-radius: 12px;
@@ -122,12 +122,71 @@ body {
 }
 
 .config-button:hover {
+    background: #1d4ed8; /* Darker on hover */
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .config-button:active {
     transform: translateY(0);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.loading-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.loading-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.loading-subtext {
+    font-size: 0.875rem;
+    color: #6b7280;
 }
 
 /* Legend */
@@ -174,40 +233,64 @@ body {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    .title-card {
-        top: 8px;
-        left: 8px;
-        right: 8px;
-        max-width: none;
-        padding: 12px;
+    /* Title Card - target the actual div */
+    .fixed.top-3.left-3[class*="bg-"] {
+        top: 0.5rem !important;
+        left: 0.5rem !important;
+        right: 0.5rem !important;
+        max-width: none !important;
     }
     
-    .title-card h1 {
-        font-size: 22px;
+    .fixed.top-3.left-3[class*="bg-"] .p-4 {
+        padding: 1rem !important;
     }
     
-    .title-card .subtitle {
-        font-size: 12px;
+    .fixed.top-3.left-3[class*="bg-"] h1 {
+        font-size: 1.5rem !important; /* 24px */
+        margin-bottom: 0.25rem !important;
     }
     
-    .config-button {
-        /* Stack below title on mobile */
-        top: auto;
-        bottom: 80px;
-        left: 8px;
-        right: 8px;
-        padding: 10px 16px;
-        font-size: 14px;
+    .fixed.top-3.left-3[class*="bg-"] p {
+        font-size: 0.75rem !important; /* 12px */
     }
     
-    .legend-container {
-        bottom: 8px;
-        right: 8px;
-        left: 8px;
-        max-width: none;
+    .fixed.top-3.left-3[class*="bg-"] #stat-total-units {
+        font-size: 1.875rem !important; /* 30px */
     }
     
-    .legend-content {
-        padding: 12px;
+    .fixed.top-3.left-3[class*="bg-"] #stat-total-parcels {
+        font-size: 1.25rem !important; /* 20px */
+    }
+    
+    /* Config Button */
+    #open-config-btn {
+        top: auto !important;
+        bottom: 0.5rem !important;
+        left: 0.5rem !important;
+        right: auto !important;
+        padding: 0.75rem 1.25rem !important;
+        font-size: 0.875rem !important; /* 14px */
+    }
+    
+    /* Legend */
+    #legend {
+        bottom: 0.5rem !important;
+        right: 0.5rem !important;
+        left: auto !important;
+        width: auto !important;
+        max-width: calc(100vw - 8rem) !important; /* Leave room for config button */
+    }
+    
+    #legend .p-4,
+    #legend-content {
+        padding: 0.75rem !important;
+    }
+    
+    #legend h4 {
+        font-size: 0.875rem !important;
+    }
+    
+    #legend .text-sm {
+        font-size: 0.75rem !important;
     }
 }

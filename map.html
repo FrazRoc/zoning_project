@@ -40,13 +40,87 @@
             border-top-color: white;
         }
     </style>
+
+    <style>
+        /* Parcel Animation */
+        .parcel-animated {
+            transition: fill-opacity 0.5s ease, opacity 0.5s ease !important;
+        }
+
+        /* Loading Overlay - Already added to base.css, but include here too for inline styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-subtext {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Analyzing Parcels...</div>
+            <div class="loading-subtext" id="loading-subtext">Evaluating development potential</div>
+        </div>
+    </div>
+
     <!-- Map Container -->
     <div id="map"></div>
     
     <!-- Title Card (Top Left) -->
-    <div class="fixed top-3 left-3 z-[1000] bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl shadow-2xl max-w-md">
+    <div class="fixed top-3 left-3 z-[1000] bg-blue-600 text-white rounded-xl shadow-2xl max-w-md">
         <div class="p-4">
             <div class="mb-3">
                 <h1 class="text-4xl font-black mb-1">Mile High Potential</h1>
@@ -62,7 +136,7 @@
             </div>
 
             <!-- From Google Gemini -->
-            <div id="stats-summary" class="bg-white p-4 rounded-lg shadow-lg border-l-4 border-blue-600">
+            <div id="stats-summary" class="bg-white p-4 mx-4 rounded-lg border-blue-600">
                 <div class="text-xs text-gray-500 uppercase tracking-wider font-bold">Total Potential Units</div>
                 <div id="stat-total-units" class="text-3xl font-black text-blue-600">0</div>
                 
@@ -82,34 +156,55 @@
     </div>
     
     <!-- Config Button (Below Title Card, Left Side) -->
-    <button id="open-config-btn" class="fixed top-[300px] left-3 z-[1000] bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl shadow-2xl px-6 py-3 font-semibold text-base hover:shadow-3xl transition-all">
+    <button id="open-config-btn" class="fixed top-[300px] left-3 z-[1000] bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-2xl px-6 py-3 font-semibold text-base hover:shadow-3xl transition-all">
         ⚙️ Configure Policy
     </button>
+
     
-    <!-- Legend (Bottom Right) -->
+    <!-- Legend (Bottom Right) -->    
     <div id="legend" class="fixed bottom-3 right-3 w-72 bg-white rounded-lg shadow-lg z-[999]">
         <div id="legend-content" class="p-4">
+            <!-- Development Density Section -->
             <h4 class="text-base font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
-                <span>Upzone Development Potential</span>
+                Development Density
             </h4>
             
-            <div class="space-y-2">
+            <div class="space-y-2 mb-4">
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF0000;"></span>
-                    <span class="text-sm text-gray-700">High Density</span>
+                    <span class="text-sm text-gray-700">High Density parcels</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF8C00;"></span>
-                    <span class="text-sm text-gray-700">Medium Density</span>
+                    <span class="text-sm text-gray-700">Medium Density parcels</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FFD700;"></span>
-                    <span class="text-sm text-gray-700">Low Density</span></span>
+                    <span class="text-sm text-gray-700">Low Density parcels</span>
+                </div>
+            </div>
+            
+            <!-- Policy Type Section -->
+            <h4 class="text-sm font-bold text-gray-800 mb-2 pb-2 border-b border-gray-200">
+                Policy Type
+            </h4>
+            <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #667eea;"></span>
+                    <span class="text-sm text-gray-700">Transit-Oriented (TOD)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #009483;"></span>
+                    <span class="text-sm text-gray-700">Park-Oriented (POD)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF6A00;"></span>
+                    <span class="text-sm text-gray-700">Bus-Oriented (BOD)</span>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Configuration Panel (slides from left) -->
     <div id="config-backdrop" class="config-backdrop"></div>
     
@@ -135,7 +230,7 @@
             </div>
             
             <div id="tod-accordion" class="accordion-body">
-                <div class="ring-config">
+                <div class="ring-config density-high">
                     <h4>Inner Ring - High Density</h4>
                     <div class="slider-group">
                         <div class="slider-label">
@@ -157,7 +252,7 @@
                     </div>
                 </div>
                 
-                <div class="ring-config">
+                <div class="ring-config density-med">
                     <h4>Middle Ring - Medium Density</h4>
                     <div class="slider-group">
                         <div class="slider-label">
@@ -179,7 +274,7 @@
                     </div>
                 </div>
                 
-                <div class="ring-config">
+                <div class="ring-config density-low">
                     <h4>Outer Ring - Low Density</h4>
                     <div class="slider-group">
                         <div class="slider-label">
@@ -218,7 +313,7 @@
                 <div class="park-config">
                     <h4>Regional Parks (75+ acres)</h4>
                     
-                    <div class="ring-config">
+                    <div class="ring-config density-med">
                         <div class="slider-group">
                             <div class="slider-label">
                                 <span>Inner Ring Distance:</span>
@@ -239,7 +334,7 @@
                         </div>
                     </div>
                     
-                    <div class="ring-config">
+                    <div class="ring-config density-low">
                         <div class="slider-group">
                             <div class="slider-label">
                                 <span>Outer Ring Distance:</span>
@@ -263,7 +358,7 @@
                 
                 <div class="park-config">
                     <h4>Community Parks (10-75 acres)</h4>
-                    <div class="ring-config">
+                    <div class="ring-config density-low">
                         <div class="slider-group">
                             <div class="slider-label">
                                 <span>Buffer Distance:</span>

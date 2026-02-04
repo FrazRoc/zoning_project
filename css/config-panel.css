@@ -44,7 +44,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #2563eb; /* Solid blue instead of gradient */
     color: white;
 }
 
@@ -59,25 +59,48 @@
     background: none;
     border: none;
     color: white;
-    font-size: 28px;
+    font-size: 32px;
     cursor: pointer;
-    padding: 0;
-    width: 32px;
-    height: 32px;
+    padding: 4px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 6px;
     transition: background 0.2s;
+    line-height: 1;
 }
 
 .panel-close:hover {
     background: rgba(255, 255, 255, 0.2);
 }
 
+/* Also target close-btn class if used */
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 32px;
+    cursor: pointer;
+    padding: 4px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background 0.2s;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
 /* Panel Content */
 .panel-content {
-    padding: 20px;
+    padding: 8px;
 }
 
 /* Section */
@@ -129,13 +152,55 @@
     background: #f7fafc;
     border-radius: 8px;
     margin-bottom: 12px;
+    border-left: 4px solid #cbd5e0; /* Default border */
 }
 
-.ring-title {
+/* Density-specific colors for ring configs */
+.ring-config.density-high {
+    background: #fef2f2;
+    border-left-color: #FF0000; /* Red for high density */
+}
+
+.ring-config.density-med {
+    background: #fffbeb;
+    border-left-color: #FF8C00; /* Orange for medium density */
+}
+
+.ring-config.density-low {
+    background: #fefce8;
+    border-left-color: #FFD700; /* Yellow for low density */
+}
+
+.ring-config h4 {
     font-size: 14px;
     font-weight: 600;
     color: #2d3748;
     margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Add colored indicator dot to ring titles */
+.ring-config h4::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #cbd5e0;
+    flex-shrink: 0;
+}
+
+.ring-config.density-high h4::before {
+    background: #FF0000;
+}
+
+.ring-config.density-med h4::before {
+    background: #FF8C00;
+}
+
+.ring-config.density-low h4::before {
+    background: #FFD700;
 }
 
 /* Slider */
@@ -252,13 +317,14 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #2563eb; /* Solid blue instead of gradient */
     color: white;
 }
 
 .btn-primary:hover {
+    background: #1d4ed8; /* Darker on hover */
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
 .btn-secondary {
@@ -308,7 +374,7 @@
     }
 
     .panel-content {
-        padding: 16px;
+        padding: 8px;
     }
 
     .ring-config {
@@ -369,21 +435,27 @@
 
 /* Active Policy Bubbles in Title Card */
 .active-policies-section {
-    margin-top: 12px;
+    margin: 12px 0px;
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .active-policies-label {
-    font-size: 12px;
+    font-size: 1em;
+    font-weight: 600;
     color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 6px;
+    white-space: nowrap;
 }
 
 .active-policies-container {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
+    flex: 1;
 }
 
 .policy-bubble {

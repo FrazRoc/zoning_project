@@ -307,13 +307,28 @@ class ConfigPanel {
         this.applyBtn.classList.add('loading');
         this.applyBtn.textContent = 'Loading...';
         this.applyBtn.disabled = true;
-        //add an overlay to the map during Loading?
+        
+        // Show loading overlay
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.classList.add('active');
+            console.log('Loading overlay shown');
+        } else {
+            console.warn('Loading overlay element not found');
+        }
     }
 
     hideLoading() {
         this.applyBtn.classList.remove('loading');
         this.applyBtn.textContent = 'Apply Changes';
         this.applyBtn.disabled = false;
+        
+        // Hide loading overlay
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+            console.log('Loading overlay hidden');
+        }
     }
 
     async apply() {
