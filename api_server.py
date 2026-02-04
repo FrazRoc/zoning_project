@@ -7,6 +7,7 @@ Refactored to support TOD, POD, and BOD with shared logic and "Highest Height Wi
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from sqlalchemy import create_engine, text
@@ -422,6 +423,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# this is supposed to Gzip the response to make it smaller for the browser
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 
 # ============================================================================
 # API ENDPOINTS
@@ -434,35 +438,6 @@ async def root():
         "status": "ok",
         "message": "Mile High Potential API",
         "version": "1.0.0"
-    }
-
-@app.get("/api/stats")
-async def get_stats(db: Session = Depends(get_db)):
-    """Get overall database statistics using shared connection"""
-    # Total parcels
-    total_parcels = db.execute(text("SELECT COUNT(*) FROM parcels;")).fetchone()[0]
-    
-    # Parcels near transit
-    parcels_near_transit = db.execute(text("""
-        SELECT COUNT(*) 
-        FROM parcels 
-        WHERE distance_to_light_rail IS NOT NULL 
-        AND distance_to_light_rail <= 1980;
-    """)).fetchone()[0]
-    
-    # Property types
-    result = db.execute(text("""
-        SELECT property_type, COUNT(*) 
-        FROM parcels 
-        GROUP BY property_type
-        ORDER BY COUNT(*) DESC;
-    """))
-    property_types = {row[0]: row[1] for row in result}
-    
-    return {
-        "total_parcels": total_parcels,
-        "parcels_near_transit": parcels_near_transit,
-        "property_types": property_types
     }
 
 @app.get("/api/stations")
@@ -538,7 +513,7 @@ async def get_parks(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @app.post("/api/evaluate-policies")
-async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get_db)):
+async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get_db)): 
     # Registry to handle "Highest Height Wins" across different policy types
     global_registry = {}
 
