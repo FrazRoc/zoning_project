@@ -134,20 +134,6 @@ class MapUpdater {
     }
 
     /**
-     * Update legend with ring counts
-     */
-    updateLegend(results) {
-        document.getElementById('legend-ring1-count').textContent = 
-            (results.parcels_by_ring['Ring 1'] || 0).toLocaleString();
-        
-        document.getElementById('legend-ring2-count').textContent = 
-            (results.parcels_by_ring['Ring 2'] || 0).toLocaleString();
-        
-        document.getElementById('legend-ring3-count').textContent = 
-            (results.parcels_by_ring['Ring 3'] || 0).toLocaleString();
-    }
-
-    /**
      * Get color for a parcel based on which ring it's in
      */
     getColorForRing(ringDensity) {

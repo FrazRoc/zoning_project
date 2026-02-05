@@ -383,23 +383,91 @@
             </div>
             </div>
             
-            <!-- BOD POLICY SECTION (Placeholder for future) -->
-            <div class="policy-section disabled" id="bod-section">
-                <div class="accordion-header">
-                    <div class="policy-header-content">
-                        <input type="checkbox" id="bod-enabled">
-                        <label for="bod-enabled">
-                            <h3>Bus-Oriented Development (BOD)</h3>
-                            <span class="coming-soon">Coming Soon</span>
-                        </label>
+            <!-- BOD POLICY SECTION -->
+            <div class="policy-section" id="bod-section">
+            <div class="accordion-header">
+                <div class="policy-header-content">
+                    <input type="checkbox" id="bod-enabled" checked>
+                    <label for="bod-enabled">
+                        <h3>Bus-Oriented Development (BOD)</h3>
+                    </label>
+                </div>
+                <span class="accordion-toggle">▼</span>
+            </div>
+            
+            <div id="bod-accordion" class="accordion-body">
+                <div class="bus-config">
+                    <h4>BRT Lines (Bus Rapid Transit)</h4>
+                    
+                    <div class="ring-config density-med">
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Inner Ring Distance:</span>
+                                <span class="slider-value"> 
+                                    <span id="brt-inner-distance-value">250</span> ft 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="brt-inner-distance" min="100" max="500" value="250" step="50">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Upzone Height:</span>
+                                <span class="slider-value"> 
+                                    <span id="brt-inner-height-value">5</span> stories 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="brt-inner-height" min="3" max="12" value="5">
+                        </div>
                     </div>
-                    <span class="accordion-toggle">▼</span>
+                    
+                    <div class="ring-config density-low">
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Outer Ring Distance:</span>
+                                <span class="slider-value"> 
+                                    <span id="brt-outer-distance-value">750</span> ft 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="brt-outer-distance" min="500" max="1000" value="750" step="50">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Upzone Height:</span>
+                                <span class="slider-value"> 
+                                    <span id="brt-outer-height-value">3</span> stories 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="brt-outer-height" min="3" max="12" value="3">
+                        </div>
+                    </div>
                 </div>
                 
-                <div id="bod-accordion" class="accordion-body">
-                    <p class="placeholder-text">Bus-oriented development configuration will be available soon.</p>
+                <div class="bus-config">
+                    <h4>Bus Stops (2+ buses per hour)</h4>
+                    <div class="ring-config density-low">
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Buffer Distance:</span>
+                                <span class="slider-value"> 
+                                    <span id="bus-distance-value">250</span> ft 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="bus-distance" min="100" max="500" value="250" step="50">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Upzone Height:</span>
+                                <span class="slider-value"> 
+                                    <span id="bus-height-value">3</span> stories 
+                                </span>
+                            </div>
+                            <input class="slider" type="range" id="bus-height" min="3" max="12" value="3">
+                        </div>
+                    </div>
                 </div>
             </div>
+            </div>
+
             
             <!-- FILTERS SECTION -->
             <div class="panel-section">
@@ -442,6 +510,15 @@
                         <span id="result-pod-units">--</span> units
                     </span>
                 </div>
+
+                <!-- BOD Stats Display -->
+                <div class="result-row">
+                    <span class="result-label">BOD:</span>
+                    <span class="result-value">
+                        <span id="result-bod-parcels">--</span> parcels, 
+                        <span id="result-bod-units">--</span> units
+                    </span>
+                </div>
             </div>
         </div>
         
@@ -464,6 +541,7 @@
     <script src="js/park-renderer.js"></script>
     <script src="js/map-updater.js"></script>
     <script src="js/config-panel-multi.js"></script>
+
     
     <!-- Main App Initialization -->
     <script>
@@ -482,7 +560,7 @@
         }).addTo(map);
         
         // Add Denver zoning layer (official city zoning districts)
-        fetch('ODC_ZONE_ZONING_A_-6072697703037489513.geojson')
+        fetch('data/ODC_ZONE_ZONING_A_-6072697703037489513.geojson')
             .then(response => response.json())
             .then(data => {
                 // Zoning color mapping (Denver official colors)
@@ -569,6 +647,39 @@
             })
             .catch(error => console.log('Zoning layer not found (optional):', error));
 
+    // Load and display bus stops
+    fetch('data/bus_stops.geojson')
+        .then(response => response.json())
+        .then(data => {
+            // Create bus stop markers
+            L.geoJSON(data, {
+                pointToLayer: function (feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: 3,
+                        fillColor: '#FF6A00',  // Orange for BOD
+                        color: '#FF6A00',
+                        weight: 1,
+                        opacity: 0.8,
+                        fillOpacity: 0.6
+                    });
+                },
+                onEachFeature: function (feature, layer) {
+                    // Popup with stop info
+                    const props = feature.properties;
+                    layer.bindPopup(`
+                        <strong>${props.stop_name}</strong><br>
+                        <small>Stop ID: ${props.stop_id}</small><br>
+                        Peak Frequency: <strong>${props.peak_frequency.toFixed(1)} trips/hour</strong><br>
+                        AM: ${props.am_frequency.toFixed(1)}/hr | PM: ${props.pm_frequency.toFixed(1)}/hr
+                    `);
+                }
+            }).addTo(map);
+            
+            console.log(`✓ Loaded ${data.features.length} bus stops`);
+        })
+        .catch(error => {
+            console.error('Error loading bus stops:', error);
+        });
 
         // Create instances (Synchronous)
         const transitRenderer = new TransitRenderer(map);

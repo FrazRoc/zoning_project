@@ -64,6 +64,35 @@ class ConfigPanel {
             communityHeight: document.getElementById('pod-community-height-value'),
         };
         
+        // BOD sliders
+        this.bodSliders = {
+            // BRT sliders
+            brtInnerDistance: document.getElementById('brt-inner-distance'),
+            brtInnerHeight: document.getElementById('brt-inner-height'),
+            brtOuterDistance: document.getElementById('brt-outer-distance'),
+            brtOuterHeight: document.getElementById('brt-outer-height'),
+            // Bus sliders
+            busDistance: document.getElementById('bus-distance'),
+            busHeight: document.getElementById('bus-height'),
+        };
+        
+        this.bodDisplays = {
+            // BRT displays
+            brtInnerDistance: document.getElementById('brt-inner-distance-value'),
+            brtInnerHeight: document.getElementById('brt-inner-height-value'),
+            brtOuterDistance: document.getElementById('brt-outer-distance-value'),
+            brtOuterHeight: document.getElementById('brt-outer-height-value'),
+            // Bus displays
+            busDistance: document.getElementById('bus-distance-value'),
+            busHeight: document.getElementById('bus-height-value'),
+        };
+        
+        // BOD sub-toggles
+        this.bodToggles = {
+            brt: document.getElementById('brt-enabled'),
+            bus: document.getElementById('bus-enabled')
+        };
+        
         // Result displays
         this.resultDisplays = {
             totalParcels: document.getElementById('result-total-parcels'),
@@ -72,6 +101,8 @@ class ConfigPanel {
             todUnits: document.getElementById('result-tod-units'),
             podParcels: document.getElementById('result-pod-parcels'),
             podUnits: document.getElementById('result-pod-units'),
+            bodParcels: document.getElementById('result-bod-parcels'),
+            bodUnits: document.getElementById('result-bod-units'),
         };
         
         this.isOpen = false;
@@ -120,6 +151,30 @@ class ConfigPanel {
             });
         });
         
+        // BOD sliders
+        Object.keys(this.bodSliders).forEach(key => {
+            const slider = this.bodSliders[key];
+            const display = this.bodDisplays[key];
+            
+            if (slider && display) {  // Check exists (BRT might be disabled)
+                slider.addEventListener('input', (e) => {
+                    display.textContent = e.target.value;
+                });
+            }
+        });
+        
+        // BOD sub-toggles (BRT and Bus)
+        if (this.bodToggles.brt) {
+            this.bodToggles.brt.addEventListener('change', (e) => {
+                this.updateBODSubPolicy('brt', e.target.checked);
+            });
+        }
+        if (this.bodToggles.bus) {
+            this.bodToggles.bus.addEventListener('change', (e) => {
+                this.updateBODSubPolicy('bus', e.target.checked);
+            });
+        }
+        
         // Action buttons
         this.applyBtn.addEventListener('click', () => this.apply());
         this.resetBtn.addEventListener('click', () => {this.reset(); this.apply();});
@@ -159,6 +214,21 @@ class ConfigPanel {
         
         // Update active policy bubbles
         this.updateActivePolicies();
+    }
+    
+    updateBODSubPolicy(subPolicy, enabled) {
+        // Enable/disable BRT or Bus controls
+        const prefix = subPolicy === 'brt' ? 'brt' : 'bus';
+        
+        // Find all controls for this sub-policy
+        const controls = document.querySelectorAll(`[id^="${prefix}-"]`);
+        controls.forEach(control => {
+            if (enabled) {
+                control.removeAttribute('disabled');
+            } else {
+                control.setAttribute('disabled', 'disabled');
+            }
+        });
     }
 
     updateActivePolicies() {
@@ -264,12 +334,49 @@ class ConfigPanel {
             }
         }
         
-        // BOD config (placeholder for future)
+        // BOD config
         if (this.policyToggles.bod.checked) {
             config.bod = {
                 enabled: true,
-                brt_lines: [],
-                medium_freq_bus: []
+                brt_enabled: this.bodToggles.brt ? this.bodToggles.brt.checked : false,
+                brt_rings: [],
+                bus_enabled: this.bodToggles.bus ? this.bodToggles.bus.checked : true,
+                bus_rings: []
+            };
+            
+            // Add BRT rings if enabled
+            if (config.bod.brt_enabled && this.bodSliders.brtInnerDistance) {
+                config.bod.brt_rings = [
+                    {
+                        distance: parseInt(this.bodSliders.brtInnerDistance.value),
+                        height: parseInt(this.bodSliders.brtInnerHeight.value),
+                        zone: `C-RX-${this.bodSliders.brtInnerHeight.value}`,
+                        density: 'high'
+                    },
+                    {
+                        distance: parseInt(this.bodSliders.brtOuterDistance.value),
+                        height: parseInt(this.bodSliders.brtOuterHeight.value),
+                        zone: `U-MX-${this.bodSliders.brtOuterHeight.value}`,
+                        density: 'med'
+                    }
+                ];
+            }
+            
+            // Add Bus rings if enabled
+            if (config.bod.bus_enabled && this.bodSliders.busDistance) {
+                config.bod.bus_rings = [
+                    {
+                        distance: parseInt(this.bodSliders.busDistance.value),
+                        height: parseInt(this.bodSliders.busHeight.value),
+                        zone: `U-MX-${this.bodSliders.busHeight.value}`,
+                        density: 'med'
+                    }
+                ];
+            }
+        }
+        else {
+            config.bod = {
+                enabled: false
             };
         }
         
@@ -299,6 +406,14 @@ class ConfigPanel {
             } else {
                 this.resultDisplays.podParcels.textContent = '--';
                 this.resultDisplays.podUnits.textContent = '--';
+            }
+            
+            if (results.summary.by_policy.BOD) {
+                this.resultDisplays.bodParcels.textContent = formatNumber(results.summary.by_policy.BOD.parcels);
+                this.resultDisplays.bodUnits.textContent = formatNumber(results.summary.by_policy.BOD.units);
+            } else {
+                this.resultDisplays.bodParcels.textContent = '--';
+                this.resultDisplays.bodUnits.textContent = '--';
             }
         }
     }
@@ -397,7 +512,7 @@ class ConfigPanel {
         // Enable all policies by default (ballot measure)
         this.policyToggles.tod.checked = true;
         this.policyToggles.pod.checked = true;
-        this.policyToggles.bod.checked = false;
+        this.policyToggles.bod.checked = true;
         
         // Set TOD defaults (V2 Ballot Measure)
         this.todSliders.ring1Distance.value = 500;
@@ -428,6 +543,6 @@ class ConfigPanel {
         // Update UI states
         this.updatePolicyState('tod', true);
         this.updatePolicyState('pod', true);
-        this.updatePolicyState('bod', false);
+        this.updatePolicyState('bod', true);
     }
 }
