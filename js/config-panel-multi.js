@@ -540,6 +540,39 @@ class ConfigPanel {
             this.podDisplays[key].textContent = this.podSliders[key].value;
         });
         
+        // Set BOD defaults (Ballot Measure)
+        if (this.bodToggles.brt) {
+            this.bodToggles.brt.checked = false; // BRT disabled (no data yet)
+        }
+        if (this.bodToggles.bus) {
+            this.bodToggles.bus.checked = true;  // Bus enabled
+        }
+        
+        if (this.bodSliders.brtInnerDistance) {
+            this.bodSliders.brtInnerDistance.value = 250;
+            this.bodSliders.brtInnerHeight.value = 5;
+            this.bodSliders.brtOuterDistance.value = 750;
+            this.bodSliders.brtOuterHeight.value = 3;
+        }
+        
+        if (this.bodSliders.busDistance) {
+            this.bodSliders.busDistance.value = 250;
+            this.bodSliders.busHeight.value = 3;
+        }
+        
+        // Update BOD displays
+        Object.keys(this.bodSliders).forEach(key => {
+            if (this.bodDisplays[key] && this.bodSliders[key]) {
+                this.bodDisplays[key].textContent = this.bodSliders[key].value;
+            }
+        });
+        
+        // Reset "Exclude Unlikely" checkbox to checked (default enabled)
+        const excludeUnlikelyCheckbox = document.getElementById('exclude-unlikely');
+        if (excludeUnlikelyCheckbox) {
+            excludeUnlikelyCheckbox.checked = true;
+        }
+        
         // Update UI states
         this.updatePolicyState('tod', true);
         this.updatePolicyState('pod', true);
