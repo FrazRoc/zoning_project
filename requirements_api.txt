@@ -13,3 +13,6 @@ psycopg2-binary==2.9.9
 
 # Data validation
 pydantic==2.5.0
+
+ORJson
+orjson==3.11.7

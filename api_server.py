@@ -8,6 +8,7 @@ Refactored to support TOD, POD, and BOD with shared logic and "Highest Height Wi
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from sqlalchemy import create_engine, text
@@ -17,6 +18,14 @@ import json
 import time
 from contextlib import contextmanager
 from functools import lru_cache
+
+try:
+    import orjson
+    HAS_ORJSON = True
+    print("✔ orjson available — using fast JSON serialization")
+except ImportError:
+    HAS_ORJSON = False
+    print("ℹ️  orjson not installed — using standard json (pip install orjson for ~5x faster serialization)")
 
 # ============================================================================
 # PERFORMANCE TIMING
@@ -190,7 +199,7 @@ def evaluate_spatial_policy(
         for parcel in result.mappings():
             parcel_count += 1
             
-            # Parse geometry once and cache it
+            # Parse geometry (already precision-truncated in DB)
             geom = json.loads(parcel['geometry_geojson'])
             
             # Compactness filtering now done in SQL query (polsby_popper_score >= 0.3)
@@ -230,19 +239,19 @@ def evaluate_spatial_policy(
 
                     global_registry[p_id] = {
                         "type": "Feature",
-                        "geometry": geom,  # ← REUSE parsed geometry instead of parsing again
+                        "geometry": geom,
                         "properties": {
                             "parcel_id": p_id,
                             "address": parcel['address'],
                             "zone_district": parcel['zone_district'],
-                            "land_area_acres": land_area,
+                            "land_area_acres": round(land_area, 3),
                             "property_type": parcel['property_type'],
                             "property_class": parcel['property_class'],
                             "owner_name": parcel['owner_name'],
                             "owner_type": parcel['owner_type'],
-                            "land_value": land_val,
-                            "improvement_value": improvement_val,
-                            "building_sqft": bldg_sqft,
+                            "land_value": round(land_val),
+                            "improvement_value": round(improvement_val),
+                            "building_sqft": round(bldg_sqft),
                             "building_age": bldg_age_year,
                             "current_units": parcel['current_units'],
                             "opportunity_type": parcel['opportunity_type'],
@@ -251,7 +260,7 @@ def evaluate_spatial_policy(
                             "potential_units": potential_units,
                             "policy_source": policy_name,
                             "ring_density": applicable_ring.density,
-                            "distance_to_feature": float(parcel[distance_column])
+                            "distance_to_feature": round(float(parcel[distance_column]))
                         }
                     }
     
@@ -275,59 +284,6 @@ def calculate_units_from_stories(land_area_acres: float, stories: float) -> int:
             units_per_acre = STORIES_TO_UPA[nearest]
     
     return round(land_area_acres * units_per_acre)
-
-def calculate_polsby_popper(geometry_json: dict) -> float:
-    """
-    Calculate Polsby-Popper compactness score to detect linear parcels.
-    
-    PP = (4π × Area) / (Perimeter²)
-    
-    Returns:
-        1.0 = perfect circle (very compact)
-        0.8+ = square/round shape
-        0.5-0.8 = rectangular
-        0.3-0.5 = elongated
-        <0.3 = very elongated/thin strip (roads/railroads)
-    """
-    try:
-        import math
-        
-        # Get coordinates
-        if geometry_json['type'] == 'Polygon':
-            coords = geometry_json['coordinates'][0]
-        elif geometry_json['type'] == 'MultiPolygon':
-            coords = geometry_json['coordinates'][0][0]
-        else:
-            return 1.0
-        
-        if len(coords) < 3:
-            return 1.0
-        
-        # Calculate area using shoelace formula
-        area = 0
-        for i in range(len(coords) - 1):
-            area += coords[i][0] * coords[i + 1][1]
-            area -= coords[i + 1][0] * coords[i][1]
-        area = abs(area) / 2.0
-        
-        # Calculate perimeter
-        perimeter = 0
-        for i in range(len(coords) - 1):
-            x1, y1 = coords[i][0], coords[i][1]
-            x2, y2 = coords[i + 1][0], coords[i + 1][1]
-            dx = x2 - x1
-            dy = y2 - y1
-            perimeter += (dx**2 + dy**2)**0.5
-        
-        # Polsby-Popper score
-        if perimeter > 0 and area > 0:
-            pp_score = (4 * math.pi * area) / (perimeter ** 2)
-            return pp_score
-        
-        return 1.0  # Assume compact if calculation fails
-        
-    except:
-        return 1.0  # Assume compact if error
 
 @lru_cache(maxsize=256)
 def get_max_stories_from_zone(zone_district: str) -> float:
@@ -545,7 +501,7 @@ async def get_parks(db: Session = Depends(get_db)):
         
         features = []
         for row in result:
-            # Parse the geojson string into a dict so it nests correctly
+            # Parse the geojson string (already precision-truncated in DB)
             geom = json.loads(row[3])
             
             features.append({
@@ -666,7 +622,7 @@ async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get
     print(f"✅ Completed: {len(features)} parcels, {total_units:,} units")
     print("="*70 + "\n")
 
-    return {
+    response_data = {
         "summary": {
             "total_units": total_units,
             "total_parcels": len(features),
@@ -678,6 +634,11 @@ async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get
             "features": features
         }
     }
+
+    # Use orjson for faster serialization of the large GeoJSON response
+    if HAS_ORJSON:
+        return ORJSONResponse(content=response_data)
+    return response_data
 
 # ============================================================================
 # RUN SERVER
