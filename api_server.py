@@ -93,9 +93,20 @@ class PODPolicyConfig(BaseModel):
     ])
 
 class BODPolicyConfig(BaseModel):
-    enabled: bool = False 
-    rings: List[RingConfig] = Field(default=[
-        RingConfig(distance=250, height=5, zone="MS-5", density="med")
+    """Bus-Oriented Development with BRT and medium-frequency bus stops"""
+    enabled: bool = True
+    
+    # BRT (Bus Rapid Transit) configuration
+    brt_enabled: bool = False  # Set to False until we have BRT data
+    brt_rings: List[RingConfig] = Field(default=[
+        RingConfig(distance=250, height=5, zone="C-RX-5", density="med"),   # Inner: RX-5x
+        RingConfig(distance=750, height=3, zone="U-MX-3", density="low")     # Outer: MU-3x
+    ])
+    
+    # Medium-frequency bus stops configuration  
+    bus_enabled: bool = True
+    bus_rings: List[RingConfig] = Field(default=[
+        RingConfig(distance=250, height=3, zone="U-MX-3", density="low")     # MU-3x
     ])
 
 class MultiPolicyConfig(BaseModel):
@@ -585,10 +596,19 @@ async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get
 
         # --- 3) Evaluate Bus (BOD) ---
         if config.bod and config.bod.enabled:
-            with timer("BOD Policy - Total"):
-                evaluate_spatial_policy(
-                    db, "BOD", config.bod.rings, "distance_to_brt", global_registry, config.exclude_unlikely
-                )
+            # BOD-BRT: Bus Rapid Transit lines
+            if config.bod.brt_enabled:
+                with timer("BOD-BRT Policy - Total"):
+                    evaluate_spatial_policy(
+                        db, "BOD-BRT", config.bod.brt_rings, "distance_to_brt", global_registry, config.exclude_unlikely
+                    )
+            
+            # BOD-Bus: Medium-frequency bus stops
+            if config.bod.bus_enabled:
+                with timer("BOD-Bus Policy - Total"):
+                    evaluate_spatial_policy(
+                        db, "BOD-Bus", config.bod.bus_rings, "distance_to_med_freq_bus", global_registry, config.exclude_unlikely
+                    )
 
         # Construct Final Response
         with timer("Building GeoJSON Response"):
@@ -613,8 +633,13 @@ async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get
                 
                 total_units += units
 
-                # Determine the parent group (e.g., POD-Regional -> POD)
-                group = "POD" if "POD-" in source else source
+                # Determine the parent group (e.g., POD-Regional -> POD, BOD-BRT -> BOD)
+                if "POD-" in source:
+                    group = "POD"
+                elif "BOD-" in source:
+                    group = "BOD"
+                else:
+                    group = source
                 
                 # Track both the specific source and the roll-up group
                 for key in [source, group]:
