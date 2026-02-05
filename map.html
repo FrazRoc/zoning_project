@@ -649,7 +649,7 @@
             .catch(error => console.log('Zoning layer not found (optional):', error));
 
     // Load and display bus stops
-    fetch('data/bus_stops.geojson')
+   /* fetch('data/bus_stops.geojson')
         .then(response => response.json())
         .then(data => {
             // Create bus stop markers
@@ -680,7 +680,7 @@
         })
         .catch(error => {
             console.error('Error loading bus stops:', error);
-        });
+        });*/
 
         // Create instances (Synchronous)
         const transitRenderer = new TransitRenderer(map);

@@ -1,6 +1,11 @@
 /**
  * Bus Renderer for Mile High Potential
- * Handles rendering of Bus stops and BRT lines
+ * Handles rendering of bus stops (from static GeoJSON) and BRT lines
+ * 
+ * Buffer Strategy: Uses a custom Canvas overlay instead of turf.union().
+ * Drawing 1,390 filled circles on a single <canvas> is near-instant,
+ * vs. sequential polygon union which chokes the browser.
+ * Overlapping circles with the same fill color visually merge automatically.
  */
 
 class BusRenderer {
@@ -8,90 +13,103 @@ class BusRenderer {
         this.map = map;
         this.brtLinesLayer = null;
         this.stopsLayer = null;
-        this.bufferRingsLayer = null;
+        this.bufferCanvasLayer = null;
         this.stops = []; // Store stops for buffer updates
+        this.busStopsData = null; // Cache loaded GeoJSON
+        this._currentBufferFeet = 250; // Track current buffer distance
     }
 
     /**
-     * Load and render BRT lines
+     * Load and render BRT lines (optional - gracefully handles if file doesn't exist)
      */
     async loadBRTLines() {
         try {
-            //const lines = await window.api.getRailLines();
+            const response = await fetch('data/brt_lines.geojson');
+            
+            if (!response.ok) {
+                console.log('ℹ️  BRT lines data not available yet');
+                return 0;
+            }
+            
+            const brtData = await response.json();
             
             this.hideLines();
             
-            // Convert to GeoJSON features
-            const geojsonFeatures = lines.map(line => ({
-                type: 'Feature',
-                properties: {
-                    route: line.route,
-                    name: line.name
-                },
-                geometry: line.geometry
-            }));
-            
-            // Add to map
-            this.brtLinesLayer = L.geoJSON({
-                type: 'FeatureCollection',
-                features: geojsonFeatures
-            }, {
+            this.brtLinesLayer = L.geoJSON(brtData, {
                 style: (feature) => {
-                    const route = feature.properties.route;
-                    // Extract just the letter (e.g., "A-Line" -> "A")
-                    const routeLetter = route ? route.charAt(0) : null;
-                    const color = '#666666';
                     return {
-                        color: color,
-                        weight: 5,
-                        opacity: 0.8
+                        color: '#FF6A00',
+                        weight: 4,
+                        opacity: 0.8,
+                        dashArray: '10, 5'
                     };
                 },
                 onEachFeature: (feature, layer) => {
-                    const routeName = feature.properties.name || feature.properties.route;
-                    layer.bindTooltip(routeName, {
-                        sticky: true
+                    const name = feature.properties.name || feature.properties.route || 'BRT Line';
+                    layer.bindTooltip(name, {
+                        sticky: true,
+                        className: 'brt-tooltip'
                     });
+                    layer.bindPopup(`<strong>${name}</strong><br><small>Bus Rapid Transit</small>`);
                 }
             }).addTo(this.map);
             
-            console.log('✓ BRT  lines loaded:', lines.length, 'segments');
-            return lines.length;
+            console.log(`✔ BRT lines loaded: ${brtData.features.length} segments`);
+            return brtData.features.length;
         } catch (error) {
-            console.log('BRT lines not loaded:', error);
+            console.log('ℹ️  BRT lines not loaded (expected if no data yet):', error.message);
             return 0;
         }
     }
 
     /**
-     * Load and render Bus Stops
+     * Load and render bus stops from static GeoJSON file
      */
     async loadStops() {
         try {
-            //const stations = await window.api.getStations();
+            const response = await fetch('data/bus_stops.geojson'); //1,923 stops
+            //const response = await fetch('data/bus_stops_merged.geojson'); // 1300 stops by merging stops with the same name
             
-            // Store stops for later buffer updates
-            this.stops = stops;
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
             
-            // Remove existing layer if present
+            this.busStopsData = await response.json();
+            
+            this.stops = this.busStopsData.features.map(feature => ({
+                stop_id: feature.properties.stop_id,
+                name: feature.properties.stop_name,
+                lat: feature.geometry.coordinates[1],
+                lon: feature.geometry.coordinates[0],
+                frequency: feature.properties.peak_frequency,
+                am_frequency: feature.properties.am_frequency,
+                pm_frequency: feature.properties.pm_frequency
+            }));
+            
             this.hideStops();
             
-            // Create station markers
-            const markers = stops.map(station => {
+            const markers = this.stops.map(stop => {
                 const marker = L.circleMarker([stop.lat, stop.lon], {
-                    radius: 6,
-                    fillColor: '#CE0E2D',  // RTD Red
-                    color: '#002F87',       // RTD Blue
-                    weight: 2,
+                    radius: 2,
+                    fillColor: '#FF6A00',
+                    color: '#ffffff',
+                    weight: 0.5,
                     opacity: 1,
                     fillOpacity: 1,
-                    pane: 'markerPane'  // Ensures stops are on top
+                    pane: 'markerPane'
                 });
                 
-                marker.bindPopup(`<strong>${stop.name}</strong>`);
+                marker.bindPopup(`
+                    <strong>${stop.name}</strong><br>
+                    <small>Stop ID: ${stop.stop_id}</small><br>
+                    Peak: <strong>${stop.frequency.toFixed(1)} trips/hr</strong><br>
+                    <small>AM: ${stop.am_frequency.toFixed(1)}/hr | PM: ${stop.pm_frequency.toFixed(1)}/hr</small>
+                `);
+                
                 marker.bindTooltip(stop.name, {
                     permanent: false,
-                    direction: 'top'
+                    direction: 'top',
+                    opacity: 0.9
                 });
                 
                 return marker;
@@ -99,65 +117,142 @@ class BusRenderer {
             
             this.stopsLayer = L.layerGroup(markers).addTo(this.map);
             
-            // Also load buffer rings around stops
-            this.loadBufferRings(stops);
+            // Draw buffer rings using canvas approach
+            this.loadBufferRings(this.stops);
             
-            console.log('✓ Bus stops loaded:', stops.length);
-            return stops.length;
+            console.log(`✔ Bus stops loaded: ${this.stops.length}`);
+            return this.stops.length;
         } catch (error) {
-            console.log('Bus Stops not loaded:', error);
+            console.error('❌ Bus stops failed to load:', error);
+            console.error('Make sure data/bus_stops_merged.geojson exists');
             return 0;
         }
     }
 
     /**
-     * Create merged buffer rings around bus stops
+     * Create merged buffer rings using a Canvas overlay.
+     * 
+     * Instead of computing turf.union() on 1,390 polygons (very slow),
+     * we draw filled circles on a single <canvas>. Overlapping circles
+     * with the same fill color visually merge — same end result, near-instant.
+     * 
      * @param {Array} stops - Array of stop objects with lat/lon
-     * @param {Number} distanceFeet - Buffer distance in feet (default 1500 for Ring 3)
+     * @param {Number} distanceFeet - Buffer distance in feet (default 250)
      */
-    loadBufferRings(stops, distanceFeet = 1500) {
-        try {
-            // Remove existing buffer layer
-            this.clearBuffers();
-            
-            // Create buffers around each station
-            const buffers = stops.map(station => {
-                // Create point
-                const point = turf.point([stop.lon, stop.lat]);
-                // Buffer by distance (converted to miles for turf)
-                return turf.buffer(point, distanceFeet / 5280, { units: 'miles' });
-            });
-            
-            // Union (merge) all overlapping buffers
-            let merged = buffers[0];
-            for (let i = 1; i < buffers.length; i++) {
-                merged = turf.union(merged, buffers[i]);
-            }
-            
-            // Add merged buffer to map
-            this.bufferRingsLayer = L.geoJSON(merged, {
-                style: {
-                    fillColor: '#667eea',
-                    fillOpacity: 0.6,
-                    color: '#667eea',
-                    weight: 2,
-                    opacity: 0.8
-                },
-                pane: 'tilePane'  // Behind everything else
-            }).addTo(this.map);
-            
-            console.log(`✓ BOD Buffer rings created: ${distanceFeet}ft radius`);
-        } catch (error) {
-            console.log('BOD Buffer rings not created:', error);
+    loadBufferRings(stops, distanceFeet = 250) {
+        this.clearBuffers();
+        
+        if (!stops || stops.length === 0) {
+            console.log('No stops available for buffer rings');
+            return;
         }
+
+        this._currentBufferFeet = distanceFeet;
+
+        // Custom Leaflet layer that draws on a <canvas>
+        const CanvasBufferLayer = L.Layer.extend({
+            initialize: function(stops, distanceFeet, options) {
+                this._stops = stops;
+                this._distanceFeet = distanceFeet;
+                L.setOptions(this, options);
+            },
+
+            onAdd: function(map) {
+                this._map = map;
+                
+                // Create canvas element
+                this._canvas = L.DomUtil.create('canvas', 'bod-buffer-canvas');
+                const pane = map.getPane('tilePane');
+                pane.appendChild(this._canvas);
+                
+                // Style the canvas
+                this._canvas.style.position = 'absolute';
+                this._canvas.style.pointerEvents = 'none';
+                
+                // Bind events
+                map.on('moveend zoomend resize', this._redraw, this);
+                this._redraw();
+            },
+
+            onRemove: function(map) {
+                map.off('moveend zoomend resize', this._redraw, this);
+                if (this._canvas && this._canvas.parentNode) {
+                    this._canvas.parentNode.removeChild(this._canvas);
+                }
+            },
+
+            _redraw: function() {
+                const map = this._map;
+                if (!map) return;
+
+                const size = map.getSize();
+                const canvas = this._canvas;
+                canvas.width = size.x;
+                canvas.height = size.y;
+
+                // Position canvas at top-left of the map container
+                const topLeft = map.containerPointToLayerPoint([0, 0]);
+                L.DomUtil.setPosition(canvas, topLeft);
+
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, size.x, size.y);
+
+                // Convert buffer distance from feet to meters for projection
+                const bufferMeters = this._distanceFeet * 0.3048;
+
+                // Draw all circles in one pass — no stroke for clean overlaps
+                ctx.fillStyle = 'rgba(255, 106, 0, 0.6)';  // BOD orange, matches TOD/POD opacity
+
+                ctx.beginPath();
+                for (const stop of this._stops) {
+                    const latlng = L.latLng(stop.lat, stop.lon);
+                    const centerPx = map.latLngToContainerPoint(latlng);
+
+                    // Calculate pixel radius: project a point bufferMeters east
+                    // to get accurate screen-space radius at this zoom level
+                    const earthRadius = 6378137; // meters
+                    const dLng = (bufferMeters / (earthRadius * Math.cos(stop.lat * Math.PI / 180))) * (180 / Math.PI);
+                    const edgePoint = L.latLng(stop.lat, stop.lon + dLng);
+                    const edgePx = map.latLngToContainerPoint(edgePoint);
+                    const radiusPx = Math.abs(edgePx.x - centerPx.x);
+
+                    // Skip stops outside the visible viewport (with buffer padding)
+                    if (centerPx.x + radiusPx < 0 || centerPx.x - radiusPx > size.x ||
+                        centerPx.y + radiusPx < 0 || centerPx.y - radiusPx > size.y) {
+                        continue;
+                    }
+
+                    ctx.moveTo(centerPx.x + radiusPx, centerPx.y);
+                    ctx.arc(centerPx.x, centerPx.y, radiusPx, 0, Math.PI * 2);
+                }
+                ctx.fill();
+
+                console.log(`✔ BOD canvas buffers drawn: ${this._stops.length} stops, ${this._distanceFeet}ft`);
+            },
+
+            // Allow updating distance without recreating the layer
+            setDistance: function(distanceFeet) {
+                this._distanceFeet = distanceFeet;
+                this._redraw();
+            }
+        });
+
+        this.bufferCanvasLayer = new CanvasBufferLayer(stops, distanceFeet);
+        this.bufferCanvasLayer.addTo(this.map);
+
+        console.log(`✔ BOD buffer rings created: ${distanceFeet}ft radius (canvas mode)`);
     }
 
     /**
-     * Update buffer rings with new distance
+     * Update buffer rings with new distance — instant with canvas approach
      * @param {Number} distanceFeet - Buffer distance in feet
      */
     updateBufferRings(distanceFeet) {
-        if (this.stops.length > 0) {
+        this._currentBufferFeet = distanceFeet;
+        if (this.bufferCanvasLayer && this.bufferCanvasLayer.setDistance) {
+            // Just update distance and redraw — no geometry computation
+            this.bufferCanvasLayer.setDistance(distanceFeet);
+        } else if (this.stops.length > 0) {
             this.loadBufferRings(this.stops, distanceFeet);
         }
     }
@@ -174,59 +269,44 @@ class BusRenderer {
         return { linesCount, stopsCount };
     }
 
-     /**
+    /**
      * Clear bus buffer rings from the map
      */
     clearBuffers() {
-        // Remove existing buffer layer
-        if (this.bufferRingsLayer) {
-            this.map.removeLayer(this.bufferRingsLayer);
-            console.log('✓ BOD buffers cleared');
-        } 
+        if (this.bufferCanvasLayer) {
+            this.map.removeLayer(this.bufferCanvasLayer);
+            this.bufferCanvasLayer = null;
+            console.log('✔ BOD buffers cleared');
+        }
     }
 
-    /**
-     * Hide BRT lines from the map
-     */
     hideLines() {
-        // Remove existing buffer layer
         if (this.brtLinesLayer) {
             this.map.removeLayer(this.brtLinesLayer);
         }
     }
-    /**
-     * Hide Bus stops from the map
-     */
+
     hideStops() {
-        // Remove existing buffer layer
         if (this.stopsLayer) {
             this.map.removeLayer(this.stopsLayer);
         }
     }
 
-    /**
-     * Show lines circles on the map
-     */
     showLines() {
         if (this.brtLinesLayer && !this.map.hasLayer(this.brtLinesLayer)) {
             this.map.addLayer(this.brtLinesLayer);
-            console.log('✓ BRT Lines shown');
+            console.log('✔ BRT lines shown');
         }
     }
 
-    /**
-     * Show stops circles on the map
-     */
     showStops() {
         if (this.stopsLayer && !this.map.hasLayer(this.stopsLayer)) {
             this.map.addLayer(this.stopsLayer);
-            console.log('✓ Bus stops shown');
+            console.log('✔ Bus stops shown');
         }
     }
-
 }
 
-// Make globally available
 window.BusRenderer = BusRenderer;
 
 console.log('Bus Renderer initialized');

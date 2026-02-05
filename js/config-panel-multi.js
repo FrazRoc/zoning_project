@@ -254,8 +254,6 @@ class ConfigPanel {
                     e.stopPropagation();
                     const policy = e.target.dataset.policy;
                     this.policyToggles[policy].checked = false;
-                    //EF: we should turn off lines, stations and parks instantly here, 
-                    // rather than wait for API return call
                     this.updatePolicyState(policy, false);
                     this.apply();
                 });
@@ -478,6 +476,19 @@ class ConfigPanel {
                 console.log("POD disabled, hiding parks and clearing buffers");
                 window.parkRenderer.hideParks();
                 window.parkRenderer.clearBuffers();
+            }
+        }
+
+        // Update bus features and buffers based on BOD toggle
+        if (window.busRenderer) {
+            if (this.policyToggles.bod.checked) {
+                console.log("BOD enabled, showing stops and updating buffers");
+                window.busRenderer.showStops();
+                window.busRenderer.updateBufferRings(parseInt(this.bodSliders.busDistance.value));
+            } else {
+                console.log("BOD disabled, hiding stops and clearing buffers");
+                window.busRenderer.hideStops();
+                window.busRenderer.clearBuffers();
             }
         }
         
