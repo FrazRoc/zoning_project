@@ -12,7 +12,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: kvs
+          type: keyvalue
           name: mile-high-potential-cache
           property: connectionString
       - key: PYTHON_VERSION
@@ -29,14 +29,15 @@ services:
         source: /*
         destination: /map.html
 
+  # 3. Key Value Store (Redis/Valkey) for API caching
+  - type: keyvalue
+    name: mile-high-potential-cache
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
 databases:
   # 3. PostgreSQL Database
   - name: mile-high-potential-db
     databaseName: mile_high_potential_db
     plan: free
-
-# 4. Redis Cache (separate top-level key in Render)
-keyValueStores:
-  - name: mile-high-potential-cache
-    plan: free
-    maxmemoryPolicy: allkeys-lru
