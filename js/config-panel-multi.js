@@ -350,14 +350,14 @@ class ConfigPanel {
                     {
                         distance: parseInt(this.bodSliders.brtInnerDistance.value),
                         height: parseInt(this.bodSliders.brtInnerHeight.value),
-                        zone: `C-RX-${this.bodSliders.brtInnerHeight.value}`,
-                        density: 'high'
+                        zone: `RX-${this.bodSliders.brtInnerHeight.value}`,
+                        density: 'med'
                     },
                     {
                         distance: parseInt(this.bodSliders.brtOuterDistance.value),
                         height: parseInt(this.bodSliders.brtOuterHeight.value),
-                        zone: `U-MX-${this.bodSliders.brtOuterHeight.value}`,
-                        density: 'med'
+                        zone: `MX-${this.bodSliders.brtOuterHeight.value}`,
+                        density: 'low'
                     }
                 ];
             }
@@ -368,8 +368,8 @@ class ConfigPanel {
                     {
                         distance: parseInt(this.bodSliders.busDistance.value),
                         height: parseInt(this.bodSliders.busHeight.value),
-                        zone: `U-MX-${this.bodSliders.busHeight.value}`,
-                        density: 'med'
+                        zone: `MX-${this.bodSliders.busHeight.value}`,
+                        density: 'low'
                     }
                 ];
             }
