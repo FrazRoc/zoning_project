@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 import os
 import json
 import time
+import hashlib
 from contextlib import contextmanager
 from functools import lru_cache
 
@@ -26,6 +27,25 @@ try:
 except ImportError:
     HAS_ORJSON = False
     print("ℹ️  orjson not installed — using standard json (pip install orjson for ~5x faster serialization)")
+
+try:
+    import redis
+    REDIS_URL = os.environ.get('REDIS_URL')
+    if REDIS_URL:
+        redis_client = redis.from_url(REDIS_URL)
+        redis_client.ping()
+        HAS_REDIS = True
+        print(f"✔ Redis connected")
+    else:
+        redis_client = None
+        HAS_REDIS = False
+        print("ℹ️  REDIS_URL not set — caching disabled")
+except Exception as e:
+    redis_client = None
+    HAS_REDIS = False
+    print(f"ℹ️  Redis not available — caching disabled ({e})")
+
+CACHE_TTL = 60 * 60 * 24  # 24 hours
 
 # ============================================================================
 # PERFORMANCE TIMING
@@ -150,6 +170,7 @@ def evaluate_spatial_policy(
         if exclude_unlikely:
             unlikely_clause = """
             AND (owner_type NOT IN ('school', 'govt') OR owner_type IS NULL)
+            AND property_class NOT IN ('INDUSTRIAL-CHURCH')
             AND (
                 (res_orig_year_built IS NULL AND com_orig_year_built IS NULL)
                 OR LEAST(COALESCE(res_orig_year_built, 9999), COALESCE(com_orig_year_built, 9999)) <= 2011
@@ -446,8 +467,23 @@ async def root():
     return {
         "status": "ok",
         "message": "Mile High Potential API",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "redis": HAS_REDIS
     }
+
+@app.post("/api/flush-cache")
+async def flush_cache():
+    """Flush all cached evaluate-policies results. Use after data updates."""
+    if not HAS_REDIS:
+        return {"status": "skipped", "message": "Redis not configured"}
+    
+    try:
+        keys = redis_client.keys("mhp:eval:*")
+        if keys:
+            redis_client.delete(*keys)
+        return {"status": "ok", "flushed": len(keys)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cache flush error: {str(e)}")
 
 @app.get("/api/stations")
 async def get_stations(db: Session = Depends(get_db)):
@@ -523,6 +559,23 @@ async def get_parks(db: Session = Depends(get_db)):
 
 @app.post("/api/evaluate-policies")
 async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get_db)): 
+    
+    # --- Cache Check ---
+    cache_key = None
+    if HAS_REDIS:
+        # Hash the config to create a stable cache key
+        config_json = config.model_dump_json()
+        cache_key = f"mhp:eval:{hashlib.md5(config_json.encode()).hexdigest()}"
+        
+        try:
+            cached = redis_client.get(cache_key)
+            if cached:
+                print(f"⚡ Cache HIT for {cache_key}")
+                if HAS_ORJSON:
+                    return ORJSONResponse(content=orjson.loads(cached))
+                return json.loads(cached)
+        except Exception as e:
+            print(f"⚠️  Cache read error: {e}")
     
     print("\n" + "="*70)
     print("🚀 Starting evaluate_policies")
@@ -634,6 +687,20 @@ async def evaluate_policies(config: MultiPolicyConfig, db: Session = Depends(get
             "features": features
         }
     }
+
+    # --- Cache Write ---
+    if HAS_REDIS and cache_key:
+        try:
+            # Serialize once, reuse for both cache and response
+            if HAS_ORJSON:
+                serialized = orjson.dumps(response_data)
+            else:
+                serialized = json.dumps(response_data, separators=(',', ':'))
+            
+            redis_client.setex(cache_key, CACHE_TTL, serialized)
+            print(f"💾 Cached response ({len(serialized) / 1024 / 1024:.1f} MB, TTL={CACHE_TTL}s)")
+        except Exception as e:
+            print(f"⚠️  Cache write error: {e}")
 
     # Use orjson for faster serialization of the large GeoJSON response
     if HAS_ORJSON:

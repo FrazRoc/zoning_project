@@ -10,6 +10,11 @@ services:
         fromDatabase:
           name: mile-high-potential-db
           property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: mile-high-potential-cache
+          property: connectionString
       - key: PYTHON_VERSION
         value: 3.10.1
 
@@ -29,3 +34,9 @@ databases:
   - name: mile-high-potential-db
     databaseName: mile_high_potential_db
     plan: free
+
+  # 4. Redis Cache
+  - type: redis
+    name: mile-high-potential-cache
+    plan: free
+    maxmemoryPolicy: allkeys-lru

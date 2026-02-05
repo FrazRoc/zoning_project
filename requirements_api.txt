@@ -14,5 +14,8 @@ psycopg2-binary==2.9.9
 # Data validation
 pydantic==2.5.0
 
-ORJson
+# Fast JSON serialization
 orjson==3.11.7
+
+# Redis caching
+redis==5.0.1
