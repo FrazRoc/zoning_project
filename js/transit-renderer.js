@@ -57,7 +57,7 @@ class TransitRenderer {
                     const color = RTD_RAIL_COLORS[routeLetter] || '#666666';
                     return {
                         color: color,
-                        weight: 5,
+                        weight: 4,
                         opacity: 0.8
                     };
                 },
@@ -93,10 +93,10 @@ class TransitRenderer {
             // Create station markers
             const markers = stations.map(station => {
                 const marker = L.circleMarker([station.lat, station.lon], {
-                    radius: 6,
+                    radius: 4,
                     fillColor: '#CE0E2D',  // RTD Red
                     color: '#002F87',       // RTD Blue
-                    weight: 2,
+                    weight: 1,
                     opacity: 1,
                     fillOpacity: 1,
                     pane: 'markerPane'  // Ensures stations are on top
