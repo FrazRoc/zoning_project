@@ -198,10 +198,10 @@
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #009483;"></span>
                     <span class="text-sm text-gray-700">Park-Oriented (POD)</span>
                 </div>
-                <!--<div class="flex items-center gap-2">
+                <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF6A00;"></span>
                     <span class="text-sm text-gray-700">Bus-Oriented (BOD)</span>
-                </div>-->
+                </div>
             </div>
         </div>
     </div>
@@ -539,6 +539,7 @@
     <script src="js/api-client.js"></script>
     <script src="js/transit-renderer.js"></script>
     <script src="js/park-renderer.js"></script>
+    <script src="js/bus-renderer.js"></script>
     <script src="js/map-updater.js"></script>
     <script src="js/config-panel-multi.js"></script>
 
@@ -688,6 +689,9 @@
         const parkRenderer = new ParkRenderer(map);
         window.parkRenderer = parkRenderer;
 
+        const busRenderer = new BusRenderer(map);
+        window.busRenderer = busRenderer;
+
         const mapUpdater = new MapUpdater(map);
         window.mapUpdater = mapUpdater;
 
@@ -698,9 +702,10 @@
             try {
                 // Load all geometry data in parallel
                 // This ensures both transit and parks are ready before we proceed
-                const [transitResult, parkResult] = await Promise.all([
+                const [transitResult, parkResult, busResult] = await Promise.all([
                     transitRenderer.loadAll(),
-                    parkRenderer.loadParks()
+                    parkRenderer.loadParks(),
+                    busRenderer.loadAll()
                 ]);
 
                 window.configPanel = new ConfigPanel();
