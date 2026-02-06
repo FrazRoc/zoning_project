@@ -191,7 +191,7 @@
             </h4>
             <div class="space-y-2">
                 <div class="flex items-center gap-2">
-                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #667eea;"></span>
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #4338ca;"></span>
                     <span class="text-sm text-gray-700">Transit-Oriented (TOD)</span>
                 </div>
                 <div class="flex items-center gap-2">
@@ -199,7 +199,7 @@
                     <span class="text-sm text-gray-700">Park-Oriented (POD)</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #FF6A00;"></span>
+                    <span class="w-4 h-4 rounded border border-gray-300" style="background-color: #d946ef;"></span>
                     <span class="text-sm text-gray-700">Bus-Oriented (BOD)</span>
                 </div>
             </div>
@@ -497,7 +497,7 @@
                 
                 <div class="result-row">
                     <span class="result-label">TOD:</span>
-                    <span class="result-value">
+                    <span class="result-value" style="color: #4338ca;">
                         <span id="result-tod-parcels">--</span> parcels, 
                         <span id="result-tod-units">--</span> units
                     </span>
@@ -505,7 +505,7 @@
                 
                 <div class="result-row">
                     <span class="result-label">POD:</span>
-                    <span class="result-value">
+                    <span class="result-value" style="color: #009483;">
                         <span id="result-pod-parcels">--</span> parcels, 
                         <span id="result-pod-units">--</span> units
                     </span>
@@ -514,7 +514,7 @@
                 <!-- BOD Stats Display -->
                 <div class="result-row">
                     <span class="result-label">BOD:</span>
-                    <span class="result-value">
+                    <span class="result-value" style="color: #d946ef;">
                         <span id="result-bod-parcels">--</span> parcels, 
                         <span id="result-bod-units">--</span> units
                     </span>
@@ -647,40 +647,6 @@
                 console.log('✓ Denver zoning layer loaded');
             })
             .catch(error => console.log('Zoning layer not found (optional):', error));
-
-    // Load and display bus stops
-   /* fetch('data/bus_stops.geojson')
-        .then(response => response.json())
-        .then(data => {
-            // Create bus stop markers
-            L.geoJSON(data, {
-                pointToLayer: function (feature, latlng) {
-                    return L.circleMarker(latlng, {
-                        radius: 3,
-                        fillColor: '#FF6A00',  // Orange for BOD
-                        color: '#FF6A00',
-                        weight: 1,
-                        opacity: 0.8,
-                        fillOpacity: 0.6
-                    });
-                },
-                onEachFeature: function (feature, layer) {
-                    // Popup with stop info
-                    const props = feature.properties;
-                    layer.bindPopup(`
-                        <strong>${props.stop_name}</strong><br>
-                        <small>Stop ID: ${props.stop_id}</small><br>
-                        Peak Frequency: <strong>${props.peak_frequency.toFixed(1)} trips/hour</strong><br>
-                        AM: ${props.am_frequency.toFixed(1)}/hr | PM: ${props.pm_frequency.toFixed(1)}/hr
-                    `);
-                }
-            }).addTo(map);
-            
-            console.log(`✓ Loaded ${data.features.length} bus stops`);
-        })
-        .catch(error => {
-            console.error('Error loading bus stops:', error);
-        });*/
 
         // Create instances (Synchronous)
         const transitRenderer = new TransitRenderer(map);

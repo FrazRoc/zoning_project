@@ -91,7 +91,7 @@ class BusRenderer {
             const markers = this.stops.map(stop => {
                 const marker = L.circleMarker([stop.lat, stop.lon], {
                     radius: 2,
-                    fillColor: '#FF6A00',
+                    fillColor: '#d946ef',
                     color: '#ffffff',
                     weight: 0.5,
                     opacity: 1,
@@ -201,7 +201,7 @@ class BusRenderer {
                 const bufferMeters = this._distanceFeet * 0.3048;
 
                 // Draw all circles in one pass — no stroke for clean overlaps
-                ctx.fillStyle = 'rgba(255, 106, 0, 0.6)';  // BOD orange, matches TOD/POD opacity
+                ctx.fillStyle = 'rgba(217, 70, 239, 0.6)';  // BOD orange, matches TOD/POD opacity
 
                 ctx.beginPath();
                 for (const stop of this._stops) {
