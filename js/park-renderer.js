@@ -12,7 +12,25 @@ class ParkRenderer {
 
     async loadParks() {
         try {
-            const parkData = await window.api.getParks();
+            let parkData;
+
+            // Try static file first (faster, no API/DB hit)
+            try {
+                const response = await fetch('data/parks.geojson');
+                if (response.ok) {
+                    parkData = await response.json();
+                    console.log('✔ Parks loaded from static file');
+                }
+            } catch (e) {
+                // Static file not available, will fall back to API
+            }
+
+            // Fall back to API if static file didn't work
+            if (!parkData) {
+                console.log('ℹ️ Static parks file not found, falling back to API');
+                parkData = await window.api.getParks();
+            }
+
             // Store features for buffer recalculations
             this.parksFeatures = parkData.features; 
 
@@ -30,7 +48,7 @@ class ParkRenderer {
                 }
             }).addTo(this.map);
 
-            console.log(`✓ ${this.parksFeatures.length} Parks loaded`);
+            console.log(`✔ ${this.parksFeatures.length} Parks loaded`);
 
             // Also load buffer rings around parks
             this.updateBuffers();
@@ -93,7 +111,7 @@ class ParkRenderer {
         if (this.bufferRingsLayer) {
             this.map.removeLayer(this.bufferRingsLayer);
             this.bufferRingsLayer = null;
-            console.log('✓ Park buffers cleared');
+            console.log('✔ Park buffers cleared');
         }
     }
 
@@ -103,7 +121,7 @@ class ParkRenderer {
     showParks() {
         if (this.parksLayer && !this.map.hasLayer(this.parksLayer)) {
             this.map.addLayer(this.parksLayer);
-            console.log('✓ Parks shown');
+            console.log('✔ Parks shown');
         }
     }
 
@@ -113,7 +131,7 @@ class ParkRenderer {
     hideParks() {
         if (this.parksLayer && this.map.hasLayer(this.parksLayer)) {
             this.map.removeLayer(this.parksLayer);
-            console.log('✓ Parks hidden');
+            console.log('✔ Parks hidden');
         }
     }
 }

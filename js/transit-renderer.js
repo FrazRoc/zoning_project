@@ -153,8 +153,8 @@ class TransitRenderer {
                 style: {
                     fillColor: '#4338ca',
                     fillOpacity: 0.6,
-                    color: '#4338ca',
-                    weight: 2,
+                    //color: '#4338ca',
+                    //weight: 2,
                     opacity: 0.8
                 },
                 pane: 'tilePane'  // Behind everything else
