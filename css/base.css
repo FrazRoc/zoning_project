@@ -233,64 +233,77 @@ body {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    /* Title Card - target the actual div */
-    .fixed.top-3.left-3[class*="bg-"] {
+
+    /* Leaflet zoom controls: move to bottom-right to avoid overlap with full-width title card */
+    .leaflet-top.leaflet-left {
+        top: auto !important;
+        bottom: 5rem !important;
+        right: 0.5rem !important;
+        left: auto !important;
+    }
+
+    /* Title Card — use stable ID instead of fragile Tailwind class-chain selector */
+    #title-card {
         top: 0.5rem !important;
         left: 0.5rem !important;
         right: 0.5rem !important;
         max-width: none !important;
     }
-    
-    .fixed.top-3.left-3[class*="bg-"] .p-4 {
+
+    #title-card .p-4 {
         padding: 1rem !important;
     }
-    
-    .fixed.top-3.left-3[class*="bg-"] h1 {
+
+    #title-card h1 {
         font-size: 1.5rem !important; /* 24px */
         margin-bottom: 0.25rem !important;
     }
-    
-    .fixed.top-3.left-3[class*="bg-"] p {
+
+    #title-card p {
         font-size: 0.75rem !important; /* 12px */
     }
-    
-    .fixed.top-3.left-3[class*="bg-"] #stat-total-units {
+
+    #title-card #stat-total-units {
         font-size: 1.875rem !important; /* 30px */
     }
-    
-    .fixed.top-3.left-3[class*="bg-"] #stat-total-parcels {
+
+    #title-card #stat-total-parcels {
         font-size: 1.25rem !important; /* 20px */
     }
-    
-    /* Config Button */
+
+    /* Config Button: occupies left half of bottom bar */
     #open-config-btn {
         top: auto !important;
         bottom: 0.5rem !important;
         left: 0.5rem !important;
         right: auto !important;
+        max-width: calc(50% - 1rem) !important;
         padding: 0.75rem 1.25rem !important;
         font-size: 0.875rem !important; /* 14px */
     }
-    
-    /* Legend */
+
+    /* Legend: occupies right half of bottom bar — no overlap with config button */
+    /* On 375px: config btn x=8→179px, legend x=196→367px, 17px gap */
     #legend {
         bottom: 0.5rem !important;
         right: 0.5rem !important;
         left: auto !important;
         width: auto !important;
-        max-width: calc(100vw - 8rem) !important; /* Leave room for config button */
+        max-width: calc(50% - 1rem) !important;
     }
-    
+
     #legend .p-4,
     #legend-content {
         padding: 0.75rem !important;
     }
-    
+
     #legend h4 {
         font-size: 0.875rem !important;
     }
-    
-    #legend .text-sm {
-        font-size: 0.75rem !important;
+
+    /* Reduce legend text to fit narrow container */
+    #legend .text-sm,
+    #legend .space-y-2 span {
+        font-size: 0.6875rem !important; /* 11px */
     }
 }

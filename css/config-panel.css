@@ -12,6 +12,8 @@
     transform: translateX(-100%);
     transition: transform 0.3s ease-in-out;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+    overscroll-behavior: contain;      /* prevent scroll bubbling to map */
 }
 
 .config-panel.open {
