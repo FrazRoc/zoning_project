@@ -242,7 +242,7 @@ body {
         left: auto !important;
     }
 
-    /* Title Card — use stable ID instead of fragile Tailwind class-chain selector */
+    /* Title Card — compact horizontal bar */
     #title-card {
         top: 0.5rem !important;
         left: 0.5rem !important;
@@ -250,25 +250,54 @@ body {
         max-width: none !important;
     }
 
+    /* Inner wrapper becomes a flex row */
     #title-card .p-4 {
-        padding: 1rem !important;
+        display: flex !important;
+        align-items: center !important;
+        padding: 0.5rem 0.75rem !important;
+        gap: 0.75rem !important;
     }
 
+    /* Title group takes remaining width */
+    #title-card .mb-3 {
+        flex: 1 1 auto !important;
+        margin-bottom: 0 !important;
+        min-width: 0 !important;
+    }
+
+    /* Compact app name — single line with ellipsis if needed */
     #title-card h1 {
-        font-size: 1.5rem !important; /* 24px */
-        margin-bottom: 0.25rem !important;
+        font-size: 1rem !important;
+        margin-bottom: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
 
-    #title-card p {
-        font-size: 0.75rem !important; /* 12px */
+    /* Hide non-essential elements */
+    #title-card p,
+    .active-policies-section,
+    #title-about-link,
+    #stat-units-label,
+    #stat-parcels-label,
+    #stat-total-parcels {
+        display: none !important;
     }
 
+    /* Stats box: transparent, no padding, sits inline at the right */
+    #stats-summary {
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        flex-shrink: 0 !important;
+        border: none !important;
+    }
+
+    /* Total units number: white to match card, compact size */
     #title-card #stat-total-units {
-        font-size: 1.875rem !important; /* 30px */
-    }
-
-    #title-card #stat-total-parcels {
-        font-size: 1.25rem !important; /* 20px */
+        font-size: 1.1rem !important;
+        color: white !important;
+        white-space: nowrap !important;
     }
 
     /* Config Button: occupies left half of bottom bar */
