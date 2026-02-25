@@ -126,7 +126,7 @@ class BODPolicyConfig(BaseModel):
     enabled: bool = True
     
     # BRT (Bus Rapid Transit) configuration
-    brt_enabled: bool = False  # Set to False until we have BRT data
+    brt_enabled: bool = True
     brt_rings: List[RingConfig] = Field(default=[
         RingConfig(distance=250, height=5, zone="C-RX-5", density="med"),   # Inner: RX-5x
         RingConfig(distance=750, height=3, zone="U-MX-3", density="low")     # Outer: MU-3x
