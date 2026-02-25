@@ -233,64 +233,134 @@ body {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    /* Title Card - target the actual div */
-    .fixed.top-3.left-3[class*="bg-"] {
+
+    /* Leaflet zoom controls: move to bottom-right to avoid overlap with full-width title card */
+    .leaflet-top.leaflet-left {
+        top: auto !important;
+        bottom: 5rem !important;
+        right: 0.5rem !important;
+        left: auto !important;
+    }
+
+    /* Title Card — two-row compact layout */
+    #title-card {
         top: 0.5rem !important;
         left: 0.5rem !important;
         right: 0.5rem !important;
         max-width: none !important;
     }
-    
-    .fixed.top-3.left-3[class*="bg-"] .p-4 {
-        padding: 1rem !important;
+
+    /* Wrapping flex: title+stat on row 1, policies on row 2 */
+    #title-card .p-4 {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        padding: 0.5rem 0.75rem !important;
+        gap: 0.25rem 0.5rem !important;
     }
-    
-    .fixed.top-3.left-3[class*="bg-"] h1 {
-        font-size: 1.5rem !important; /* 24px */
-        margin-bottom: 0.25rem !important;
+
+    /* Title group: left side of row 1 */
+    #title-card .mb-3 {
+        flex: 1 1 auto !important;
+        margin-bottom: 0 !important;
+        min-width: 0 !important;
+        order: 1 !important;
     }
-    
-    .fixed.top-3.left-3[class*="bg-"] p {
-        font-size: 0.75rem !important; /* 12px */
+
+    #title-card h1 {
+        font-size: 1rem !important;
+        margin-bottom: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
-    
-    .fixed.top-3.left-3[class*="bg-"] #stat-total-units {
-        font-size: 1.875rem !important; /* 30px */
+
+    /* Stats: right side of row 1 */
+    #stats-summary {
+        order: 2 !important;
+        flex-shrink: 0 !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
     }
-    
-    .fixed.top-3.left-3[class*="bg-"] #stat-total-parcels {
-        font-size: 1.25rem !important; /* 20px */
+
+    #title-card #stat-total-units {
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        color: white !important;
+        white-space: nowrap !important;
     }
-    
-    /* Config Button */
+
+    /* "units" label appended as a small CSS suffix — no HTML change needed */
+    #title-card #stat-total-units::after {
+        content: " units";
+        font-size: 0.65rem;
+        font-weight: normal;
+        opacity: 0.85;
+    }
+
+    /* Active Policies: row 2, full width */
+    .active-policies-section {
+        order: 3 !important;
+        flex-basis: 100% !important;
+        margin: 0 !important;
+        padding-top: 0.4rem !important;
+        padding-bottom: 0 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .active-policies-label {
+        font-size: 0.75rem !important;
+    }
+
+    .policy-bubble {
+        font-size: 0.75rem !important;
+        padding: 2px 8px !important;
+    }
+
+    /* Hide: subtitle, stat labels, parcels row, about link */
+    #title-card p,
+    #stat-units-label,
+    #stat-parcels-label,
+    #stat-total-parcels,
+    #title-about-link {
+        display: none !important;
+    }
+
+    /* Config Button: occupies left half of bottom bar */
     #open-config-btn {
         top: auto !important;
         bottom: 0.5rem !important;
         left: 0.5rem !important;
         right: auto !important;
+        max-width: calc(50% - 1rem) !important;
         padding: 0.75rem 1.25rem !important;
         font-size: 0.875rem !important; /* 14px */
     }
-    
-    /* Legend */
+
+    /* Legend: occupies right half of bottom bar — no overlap with config button */
+    /* On 375px: config btn x=8→179px, legend x=196→367px, 17px gap */
     #legend {
         bottom: 0.5rem !important;
         right: 0.5rem !important;
         left: auto !important;
         width: auto !important;
-        max-width: calc(100vw - 8rem) !important; /* Leave room for config button */
+        max-width: calc(50% - 1rem) !important;
     }
-    
+
     #legend .p-4,
     #legend-content {
         padding: 0.75rem !important;
     }
-    
+
     #legend h4 {
         font-size: 0.875rem !important;
     }
-    
-    #legend .text-sm {
-        font-size: 0.75rem !important;
+
+    /* Reduce legend text to fit narrow container */
+    #legend .text-sm,
+    #legend .space-y-2 span {
+        font-size: 0.6875rem !important; /* 11px */
     }
 }
