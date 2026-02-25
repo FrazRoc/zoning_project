@@ -242,7 +242,7 @@ body {
         left: auto !important;
     }
 
-    /* Title Card — compact horizontal bar */
+    /* Title Card — two-row compact layout */
     #title-card {
         top: 0.5rem !important;
         left: 0.5rem !important;
@@ -250,22 +250,23 @@ body {
         max-width: none !important;
     }
 
-    /* Inner wrapper becomes a flex row */
+    /* Wrapping flex: title+stat on row 1, policies on row 2 */
     #title-card .p-4 {
         display: flex !important;
+        flex-wrap: wrap !important;
         align-items: center !important;
         padding: 0.5rem 0.75rem !important;
-        gap: 0.75rem !important;
+        gap: 0.25rem 0.5rem !important;
     }
 
-    /* Title group takes remaining width */
+    /* Title group: left side of row 1 */
     #title-card .mb-3 {
         flex: 1 1 auto !important;
         margin-bottom: 0 !important;
         min-width: 0 !important;
+        order: 1 !important;
     }
 
-    /* Compact app name — single line with ellipsis if needed */
     #title-card h1 {
         font-size: 1rem !important;
         margin-bottom: 0 !important;
@@ -274,30 +275,57 @@ body {
         text-overflow: ellipsis !important;
     }
 
-    /* Hide non-essential elements */
-    #title-card p,
-    .active-policies-section,
-    #title-about-link,
-    #stat-units-label,
-    #stat-parcels-label,
-    #stat-total-parcels {
-        display: none !important;
-    }
-
-    /* Stats box: transparent, no padding, sits inline at the right */
+    /* Stats: right side of row 1 */
     #stats-summary {
+        order: 2 !important;
+        flex-shrink: 0 !important;
         background: transparent !important;
         padding: 0 !important;
         margin: 0 !important;
-        flex-shrink: 0 !important;
         border: none !important;
     }
 
-    /* Total units number: white to match card, compact size */
     #title-card #stat-total-units {
         font-size: 1.1rem !important;
+        font-weight: 700 !important;
         color: white !important;
         white-space: nowrap !important;
+    }
+
+    /* "units" label appended as a small CSS suffix — no HTML change needed */
+    #title-card #stat-total-units::after {
+        content: " units";
+        font-size: 0.65rem;
+        font-weight: normal;
+        opacity: 0.85;
+    }
+
+    /* Active Policies: row 2, full width */
+    .active-policies-section {
+        order: 3 !important;
+        flex-basis: 100% !important;
+        margin: 0 !important;
+        padding-top: 0.4rem !important;
+        padding-bottom: 0 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .active-policies-label {
+        font-size: 0.75rem !important;
+    }
+
+    .policy-bubble {
+        font-size: 0.75rem !important;
+        padding: 2px 8px !important;
+    }
+
+    /* Hide: subtitle, stat labels, parcels row, about link */
+    #title-card p,
+    #stat-units-label,
+    #stat-parcels-label,
+    #stat-total-parcels,
+    #title-about-link {
+        display: none !important;
     }
 
     /* Config Button: occupies left half of bottom bar */
