@@ -12,53 +12,121 @@ class BusRenderer {
     constructor(map) {
         this.map = map;
         this.brtLinesLayer = null;
+        this.brtBufferLayer = null;
         this.stopsLayer = null;
         this.bufferCanvasLayer = null;
         this.stops = []; // Store stops for buffer updates
         this.busStopsData = null; // Cache loaded GeoJSON
-        this._currentBufferFeet = 250; // Track current buffer distance
+        this.brtFeatures = []; // Store BRT corridor features for buffer recalculations
+        this._currentBufferFeet = 250; // Track current bus stop buffer distance
     }
 
     /**
-     * Load and render BRT lines (optional - gracefully handles if file doesn't exist)
+     * Load and render BRT corridor polygons from static GeoJSON
      */
     async loadBRTLines() {
         try {
             const response = await fetch('data/brt_lines.geojson');
             
             if (!response.ok) {
-                console.log('ℹ️  BRT lines data not available yet');
+                console.log('ℹ️  BRT corridor data not available yet');
                 return 0;
             }
             
             const brtData = await response.json();
+            this.brtFeatures = brtData.features;
             
             this.hideLines();
             
             this.brtLinesLayer = L.geoJSON(brtData, {
                 style: (feature) => {
                     return {
-                        color: '#FF6A00',
-                        weight: 4,
-                        opacity: 0.8,
-                        dashArray: '10, 5'
+                        fillColor: '#D946EF',
+                        fillOpacity: 0.7,
+                        color: '#CC5500',
+                        weight: 2,
+                        opacity: 0.9
                     };
                 },
                 onEachFeature: (feature, layer) => {
-                    const name = feature.properties.name || feature.properties.route || 'BRT Line';
-                    layer.bindTooltip(name, {
+                    const name = feature.properties.name || 'BRT Corridor';
+                    const level = feature.properties.investment_level || '';
+                    layer.bindTooltip(`<strong>${name}</strong>`, {
                         sticky: true,
                         className: 'brt-tooltip'
                     });
-                    layer.bindPopup(`<strong>${name}</strong><br><small>Bus Rapid Transit</small>`);
+                    layer.bindPopup(`<strong>${name}</strong><br><small>${level}</small>`);
                 }
             }).addTo(this.map);
             
-            console.log(`✔ BRT lines loaded: ${brtData.features.length} segments`);
+            // Draw initial outer buffer around BRT corridors
+            this.updateBRTBuffers();
+            
+            console.log(`✔ BRT corridors loaded: ${brtData.features.length} segments`);
             return brtData.features.length;
         } catch (error) {
-            console.log('ℹ️  BRT lines not loaded (expected if no data yet):', error.message);
+            console.log('ℹ️  BRT corridors not loaded:', error.message);
             return 0;
+        }
+    }
+
+    /**
+     * Generate buffer around BRT corridor polygons using turf.buffer + combine.
+     * Same approach as park-renderer — only 7 features so performance is fine.
+     * @param {Number} distanceFeet - Buffer distance in feet (default 750, the outer ring)
+     */
+    updateBRTBuffers(distanceFeet = 750) {
+        if (!this.brtFeatures || this.brtFeatures.length === 0) {
+            console.warn("⚠️ BRT buffers requested but no corridor features loaded.");
+            return;
+        }
+        
+        try {
+            console.time('⚡ BRT Buffer');
+            
+            if (this.brtBufferLayer) this.map.removeLayer(this.brtBufferLayer);
+
+            const bufferList = this.brtFeatures.map(corridor => {
+                return distanceFeet > 0 
+                    ? turf.buffer(corridor, distanceFeet / 5280, { units: 'miles' }) 
+                    : null;
+            }).filter(x => x);
+
+            if (bufferList.length === 0) return;
+
+            // Use sequential union (not combine) to dissolve overlapping buffers.
+            // combine() uses even-odd fill rule which creates holes at intersections.
+            // turf v6 union() takes two polygon args. Only 7 features so this is instant.
+            let merged = bufferList[0];
+            for (let i = 1; i < bufferList.length; i++) {
+                merged = turf.union(merged, bufferList[i]);
+            }
+
+            this.brtBufferLayer = L.geoJSON(merged, {
+                style: {
+                    fillColor: '#D946EF',
+                    fillOpacity: 0.35,
+                    color: '#D946EF',
+                    weight: 1,
+                    opacity: 0.6
+                },
+                pane: 'tilePane'
+            }).addTo(this.map);
+
+            console.timeEnd('⚡ BRT Buffer');
+        } catch (error) {
+            console.error('Error updating BRT buffers:', error);
+        }
+    }
+
+    /**
+     * Clear BRT buffer rings from the map
+     */
+    clearBRTBuffers() {
+        if (this.brtBufferLayer) {
+            this.map.removeLayer(this.brtBufferLayer);
+            this.brtBufferLayer = null;
+            console.log('✔ BRT buffers cleared');
         }
     }
 
@@ -201,7 +269,7 @@ class BusRenderer {
                 const bufferMeters = this._distanceFeet * 0.3048;
 
                 // Draw all circles in one pass — no stroke for clean overlaps
-                ctx.fillStyle = 'rgba(217, 70, 239, 0.6)';  // BOD orange, matches TOD/POD opacity
+                ctx.fillStyle = 'rgba(217, 70, 239, 0.6)';  // BOD purple, matches TOD/POD opacity
 
                 ctx.beginPath();
                 for (const stop of this._stops) {

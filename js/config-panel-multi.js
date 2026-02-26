@@ -336,7 +336,7 @@ class ConfigPanel {
         if (this.policyToggles.bod.checked) {
             config.bod = {
                 enabled: true,
-                brt_enabled: this.bodToggles.brt ? this.bodToggles.brt.checked : false,
+                brt_enabled: this.bodToggles.brt ? this.bodToggles.brt.checked : true,
                 brt_rings: [],
                 bus_enabled: this.bodToggles.bus ? this.bodToggles.bus.checked : true,
                 bus_rings: []
@@ -482,11 +482,33 @@ class ConfigPanel {
         // Update bus features and buffers based on BOD toggle
         if (window.busRenderer) {
             if (this.policyToggles.bod.checked) {
-                console.log("BOD enabled, showing stops and updating buffers");
-                window.busRenderer.showStops();
-                window.busRenderer.updateBufferRings(parseInt(this.bodSliders.busDistance.value));
+                // BRT corridors
+                const brtEnabled = this.bodToggles.brt ? this.bodToggles.brt.checked : true;
+                if (brtEnabled) {
+                    console.log("BRT enabled, showing corridors and updating buffers");
+                    window.busRenderer.showLines();
+                    window.busRenderer.updateBRTBuffers(parseInt(this.bodSliders.brtOuterDistance.value));
+                } else {
+                    console.log("BRT disabled, hiding corridors and clearing buffers");
+                    window.busRenderer.hideLines();
+                    window.busRenderer.clearBRTBuffers();
+                }
+                
+                // Bus stops
+                const busEnabled = this.bodToggles.bus ? this.bodToggles.bus.checked : true;
+                if (busEnabled) {
+                    console.log("BOD-Bus enabled, showing stops and updating buffers");
+                    window.busRenderer.showStops();
+                    window.busRenderer.updateBufferRings(parseInt(this.bodSliders.busDistance.value));
+                } else {
+                    console.log("BOD-Bus disabled, hiding stops and clearing buffers");
+                    window.busRenderer.hideStops();
+                    window.busRenderer.clearBuffers();
+                }
             } else {
-                console.log("BOD disabled, hiding stops and clearing buffers");
+                console.log("BOD disabled, hiding all bus features");
+                window.busRenderer.hideLines();
+                window.busRenderer.clearBRTBuffers();
                 window.busRenderer.hideStops();
                 window.busRenderer.clearBuffers();
             }
@@ -553,7 +575,7 @@ class ConfigPanel {
         
         // Set BOD defaults (Ballot Measure)
         if (this.bodToggles.brt) {
-            this.bodToggles.brt.checked = false; // BRT disabled (no data yet)
+            this.bodToggles.brt.checked = true; // BRT enabled
         }
         if (this.bodToggles.bus) {
             this.bodToggles.bus.checked = true;  // Bus enabled
