@@ -43,7 +43,7 @@ class BusRenderer {
                     return {
                         fillColor: '#D946EF',
                         fillOpacity: 0.7,
-                        color: '#CC5500',
+                        color: '#D946EF',
                         weight: 2,
                         opacity: 0.9
                     };
@@ -105,10 +105,10 @@ class BusRenderer {
             this.brtBufferLayer = L.geoJSON(merged, {
                 style: {
                     fillColor: '#D946EF',
-                    fillOpacity: 0.35,
+                    fillOpacity: 0.6,
                     color: '#D946EF',
-                    weight: 1,
-                    opacity: 0.6
+                    weight: 2,
+                    opacity: 0.8
                 },
                 pane: 'tilePane'
             }).addTo(this.map);
